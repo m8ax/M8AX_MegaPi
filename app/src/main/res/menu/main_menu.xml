@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_borrar"
+        android:title="● Borrar Archivo Generado M8AX_Pi.txt"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_chess"
+        android:title="● Juega Al Ajedrez - ( Tú vs CPU )"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_pong"
+        android:title="● Juega Al Pong - ( Tú vs CPU )"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_ayuda"
+        android:title="● Ayuda Técnica"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_acerca_de"
+        android:title="● Acerca De..."
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_salir"
+        android:title="● Salir De La App"
+        app:showAsAction="never" />
+</menu>
