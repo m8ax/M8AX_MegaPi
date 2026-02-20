@@ -17,8 +17,8 @@
 #define printf(...) __android_log_print(ANDROID_LOG_INFO, "M8AX_MOTOR", __VA_ARGS__)
 #define puts(str) __android_log_print(ANDROID_LOG_INFO, "M8AX_MOTOR", "%s", str)
 long double termis;
-long tiempoa, tiempob, coco2, seg, min, horas, dias, anos;
-float paginas = 1500, quijote = 2034611;
+long tiempoa, tiempob, coco2, min;
+double paginas = 1500.0, quijote = 2034611.0;
 #if CHECK_MEMUSAGE
 #undef CHECK_MEMUSAGE
 #define CHECK_MEMUSAGE
@@ -38,19 +38,10 @@ m8ax_tiempo_cpu()
 #include <sys/time.h>
 #include <sys/resource.h>
 
-void convertir(long int numseg) {
-    anos = numseg / 31536000;
-    dias = (numseg % 31536000) / 86400;
-    horas = ((numseg % 31536000) % 86400) / 3600;
-    min = (((numseg % 31536000) % 86400) % 3600) / 60;
-    seg = (((numseg % 31536000) % 86400) % 3600) % 60;
-    printf("%lia %lid %lih %lim %lis", anos, dias, horas, min, seg);
-}
-
-int static m8ax_tiempo_cpu() {
+long static m8ax_tiempo_cpu() {
     struct rusage rus;
-    getrusage(0, &rus);
-    return rus.ru_utime.tv_sec * 1000 + rus.ru_utime.tv_usec / 1000;
+    getrusage(RUSAGE_SELF, &rus);
+    return (long) rus.ru_utime.tv_sec * 1000 + (long) rus.ru_utime.tv_usec / 1000;
 }
 
 #endif
@@ -543,6 +534,7 @@ int calcular_pi(long int d, int out) {
     long int i, depth = 1, maxi, minim, sumd = 0, terms, numeris[256];
     unsigned long psize, qsize;
     float megas, indv, hum, hum2 = 0, pcen, ab, bc;
+    double chi_square = 0, esperado;
     long begin, mid0, mid1, mid2, mid3, mid4, end;
     int letra, ju, ja, jar;
     progress = 0;
@@ -560,7 +552,7 @@ int calcular_pi(long int d, int out) {
     puts("Para Obtener Un Índice De Velocidad Real Y Poder Comparar Tu Móvil,");
     puts("Se Recomienda Calcular Al Menos 10.000.000 (10M) De Decimales.");
     puts("Este Índice Tendrá Una Referencia De 100 Puntos Si Logra 10M En 1 Seg.");
-    puts("Por Ejemplo: S4 Mini (1.285 pts) | Mi 9 Lite (6.506 pts) | ¿ Y Tu Móvil ? |");
+    puts("Por Ejemplo: S4 Mini (1.285 pts) | Mi 9 Lite (5.506 pts) | ¿ Y Tu Móvil ? |");
     puts("Calcula Ahora 10M De Decimales... ¿ Qué Puntuación Sacas ?");
     puts("");
     puts("Te Puede Servir A Modo De BenchMark En Tus Equipos Móviles Ó Para");
@@ -611,14 +603,14 @@ int calcular_pi(long int d, int out) {
     printf("M8AX - [ Número De Términos. - %ld. Profundidad FFT. - %ld. ] - M8AX\n", terms, depth);
     begin = m8ax_tiempo_cpu();
     printf("\n------------------------------------------------------------------------\n");
-    printf("M8AX - [ Criba De ChudNovSky. - ");
-    fflush(stdout);
     m8ax_criba_size = max(3 * 5 * 23 * 29 + 1, terms * 6);
     m8ax_criba = (cribam8ax_t *) malloc(sizeof(cribam8ax_t) * m8ax_criba_size / 2);
     construye_m8ax_criba(m8ax_criba_size, m8ax_criba);
     mid0 = m8ax_tiempo_cpu();
-    printf("%.5f Segundos. ] - M8AX\n", (double) (mid0 - begin) / 1000);
+    printf("M8AX - [ Criba De ChudNovSky. - %.5f Segundos. ] - M8AX\n",
+           (double) (mid0 - begin) / 1000);
     printf("------------------------------------------------------------------------\n");
+    puts("");
     pstack = malloc(sizeof(mpz_t) * depth);
     qstack = malloc(sizeof(mpz_t) * depth);
     gstack = malloc(sizeof(mpz_t) * depth);
@@ -687,21 +679,18 @@ int calcular_pi(long int d, int out) {
     mid2 = m8ax_tiempo_cpu();
     mpf_init(t1);
     mpf_init(t2);
-    printf("M8AX - [ Haciendo Divisiones. - ");
-    fflush(stdout);
     m8ax_mis_divisiones(qi, pi, qi);
     mid3 = m8ax_tiempo_cpu();
-    printf("%.5f Segundos. ] - M8AX\n", (double) (mid3 - mid2) / 1000);
-    printf("M8AX - [ Haciendo Raíces Cuadradas Inversas. - ");
-    fflush(stdout);
+    printf("M8AX - [ Haciendo Divisiones. - %.5f Segundos. ] - M8AX\n",
+           (double) (mid3 - mid2) / 1000);
     mi_lugar_del_sqrt(pi, C);
     mid4 = m8ax_tiempo_cpu();
-    printf("%.5f Segundos. ] - M8AX\n", (double) (mid4 - mid3) / 1000);
-    printf("M8AX - [ Haciendo Multiplicaciones. - ");
-    fflush(stdout);
+    printf("M8AX - [ Haciendo Raíces Cuadradas Inversas. - %.5f Segundos. ] - M8AX\n",
+           (double) (mid4 - mid3) / 1000);
     mpf_mul(qi, qi, pi);
     end = m8ax_tiempo_cpu();
-    printf("%.5f Segundos. ] - M8AX\n", (double) (end - mid4) / 1000);
+    printf("M8AX - [ Haciendo Multiplicaciones. - %.5f Segundos. ] - M8AX\n",
+           (double) (end - mid4) / 1000);
     printf("M8AX - [ Tiempo Total Del Cálculo. - %.5f Segundos. ] - M8AX\n\n",
            (double) (end - begin) / 1000);
     fflush(stdout);
@@ -709,17 +698,32 @@ int calcular_pi(long int d, int out) {
            "M8AX - [ Tamaño De Q. - %ld Dígitos. ( %f ) ] - M8AX\n\n",
            psize, (double) psize / d, qsize, (double) qsize / d);
     printf("M8AX - [ Decimales De PI Calculados. - %li Decimales. ]\n", d);
-    printf("M8AX - [ Tiempo Total Del Cálculo. - ");
-    convertir((double) (end - begin) / 1000);
-    printf(". ]\n");
-    printf("M8AX - [ Libros Del Quijote Procesados. - %.3f Libros. ]\n", d / quijote);
-    printf("M8AX - [ Páginas A5 Del Quijote Procesadas. - %.3f Páginas. ]\n", d / paginas);
+    double tiempo_total_seg = (double) (end - begin) / 1000.0;
+    double q_total = (double) d / quijote;
+    double p_total = (double) d / paginas;
+    double q_seg = q_total / tiempo_total_seg;
+    double p_seg = p_total / tiempo_total_seg;
+    double d_seg = (double) d / tiempo_total_seg;
+    double v_kmh = (((double) d * 0.25100377) / 100000.0) / (tiempo_total_seg / 3600.0);
+    double l_seg = ((double) d * 0.0512) / 1000.0 / tiempo_total_seg;
+    long int t_s = (long int) tiempo_total_seg;
+    long int anoss = t_s / 31536000;
+    long int diass = (t_s % 31536000) / 86400;
+    long int horass = ((t_s % 31536000) % 86400) / 3600;
+    long int minn = (((t_s % 31536000) % 86400) % 3600) / 60;
+    long int segg = (((t_s % 31536000) % 86400) % 3600) % 60;
+    printf("M8AX - [ Tiempo Total Del Cálculo. - %lia %lid %lih %lim %lis. ]\n", anoss, diass,
+           horass, minn, segg);
+    printf("M8AX - [ Libros Del Quijote Procesados. - %.3f Libros. ]\n",
+           (double) d / (double) quijote);
+    printf("M8AX - [ Páginas A5 Del Quijote Procesadas. - %.3f Páginas. ]\n",
+           (double) d / (double) paginas);
     printf("M8AX - [ Quijotes Por Segundo Procesados. - %.3f Quijotes/Seg. ]\n",
-           (d / quijote) / ((double) (end - begin) / 1000));
+           q_seg);
     printf("M8AX - [ Páginas A5 Por Segundo. - %.3f PgsA5/Seg. ]\n",
-           (d / paginas) / ((double) (end - begin) / 1000));
+           p_seg);
     printf("M8AX - [ Decimales De Pi/Seg. - %.3f DecPi/Seg. ]\n",
-           d / ((double) (end - begin) / 1000));
+           d_seg);
     hum = (d / 2) / 86400.000;
     if (hum < 1) {
         hum = ((d / 2) / 86400.000) * 1440;
@@ -728,24 +732,25 @@ int calcular_pi(long int d, int out) {
     }
     if (hum2 == 0)
         printf("M8AX - [ Días Leyendo Los Decimales En Voz Alta - %.5f d. ]\n", hum);
-    printf("M8AX - [ Dígitos En Fila Tamaño 10 ppp Miden - %.5f Km. ]\n", (d * 0.45) / 100000);
+    printf("M8AX - [ Decimales De Pi En Fila ( Arial 10 pt ) Miden - %.5f Km. ]\n",
+           ((double) d * 0.25100377) / 100000);
     printf("M8AX - [ Velocidad En Km/h. - %.5f Km/h. ]\n",
-           ((d * 0.45) / 100000) / (((double) (end - begin) / 1000) / 3600));
+           v_kmh);
     printf("M8AX - [ Bolis Bic Gastados Escribiendo Los Decimales - %.5f Bolis. ]\n",
-           ((d * 0.45) / 100) / 1254);
+           (((double) d * 0.25100377) / 100.0) / 2435.0);
     printf("M8AX - [ Bolsas De 1Kg De Arroz. Cada Grano Un Dígito. - %.5f Bolsas. ]\n",
-           d / 30000.00000);
+           (double) d / 30000.00000);
     printf("M8AX - [ Litros De Agua. 1 Dígito = 1 Gota De Agua - %.5f Litros. ]\n",
-           (d * 0.06) / 1000.00000);
+           ((double) d * 0.0512) / 1000.00000);
     printf("M8AX - [ Litros De Agua/Seg Procesados. - %.5f Litros/Seg. ]\n",
-           (d * 0.06) / 1000.00000 / ((double) (end - begin) / 1000));
-    indv = (d / ((double) (end - begin) / 1000) * 100) / 10000000;
+           l_seg);
+    indv = (d_seg * 100.0) / 10000000.0;
     printf("\n------------------------------------------------------------------------\n"
-           "M8AX - [ Índice De Velocidad De Tu Móvil - %.3lf - M8AX ]\n"
-           "M8AX - [ Ref. 100 Pts = 10M Dec/Seg ] | [ Mi 9 Lite = 6.506 ] | [ S4 Mini = 1.285 ]\n",
+           "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f - M8AX ]\n"
+           "M8AX - [ Ref. 100 Pts = 10M Dec/Seg ] | [ Mi 9 Lite = 5.506 ] | [ S4 Mini = 1.285 ]\n",
            indv);
     if (out == 1) {
-        printf("\n------------------------------------------------------------------------\nM8AX - Espera Un Momentito, Grabando Archivo En Disco - M8AX\n------------------------------------------------------------------------\n");
+        printf("\n------------------------------------------------------------------------\nM8AX - Espera Un Momentito, Grabando Archivo En SDCard - M8AX\n------------------------------------------------------------------------\n");
         printf("\nM8AX - [ Fichero M8AX_Pi.txt Grabado En /storage/emulated/0/Android/data/com.m8ax_megapi/files/ En %.5f Segundos. ] - M8AX\n",
                (double) (m8ax_tiempo_cpu() - end) / 1000);
         printf("\n");
@@ -753,29 +758,31 @@ int calcular_pi(long int d, int out) {
     if (out == 1) {
         printf("\nM8AX - [ Generando String En RAM Y Contando... ]\n");
         mp_exp_t expon;
-        char *str = mpf_get_str(NULL, &expon, 10, d, qi);
+        char *str = mpf_get_str(NULL, &expon, 10, d + 10, qi);
         if (str) {
             for (int j = 0; j < 256; j++) numeris[j] = 0;
-            for (long i = 0; i < d; i++) {
+            for (long i = 1; i <= d; i++) {
                 numeris[(unsigned char) str[i]]++;
             }
             FILE *archi = fopen(
                     "/storage/emulated/0/Android/data/com.m8ax_megapi/files/M8AX_Pi.txt", "w");
             if (archi) {
-                fprintf(archi, "0.");
-                fwrite(str, 1, d, archi);
+                fprintf(archi, "3.");
+                fwrite(str + 1, 1, d, archi);
                 fclose(archi);
             }
             free(str);
-            printf("M8AX - [ Decimales Grabados Y Estadísticas Listas ]\n\n");
+            printf("M8AX - [ Decimales Grabados Y Estadísticas Listas. ]\n\n");
         }
-        numeris[49]++;
-        numeris[51]--;
         maxi = 0;
         minim = 2147483647;
         sumd = 0;
+        chi_square = 0;
+        esperado = (double) d / 10.0;
         for (ju = 48; ju <= 57; ju++) {
             sumd = sumd + numeris[ju] * (ju - 48);
+            double dif = (double) numeris[ju] - esperado;
+            chi_square += (dif * dif) / esperado;
             if (numeris[ju] > maxi) {
                 maxi = numeris[ju];
                 ja = ju;
@@ -795,11 +802,21 @@ int calcular_pi(long int d, int out) {
                ab, 37);
         printf(". El Dígito Que Menos Ha Salido Es El %c. Sale %li Veces, El %.3f%c .\n\n", jar,
                minim, bc, 37);
+        printf("M8AX - [ Test De Aleatoriedad Chi-Square: %.4f ] - M8AX\n", chi_square);
+        if (chi_square < 16.92) {
+            printf("M8AX - [ Distribución: EXCELENTE - Normalidad CPU / RAM ] - M8AX\n");
+            printf("M8AX - [ Tu Smartphone Tiene Una Salud Envidiable. ] - M8AX\n");
+        } else {
+            printf("M8AX - [ Distribución: SOSPECHOSA - Posible Error De CPU / RAM ] - M8AX\n");
+            printf("M8AX - [ Datos No Uniformes. El Hardware Podría Estar Fallando. ] - M8AX\n");
+        }
         FILE *archi2 = fopen("/storage/emulated/0/Android/data/com.m8ax_megapi/files/M8AX_Pi.txt",
                              "a");
         if (archi2) {
             fprintf(archi2, " \n\n");
-            fprintf(archi2, "M8AX - [ Pi - ( 0,%ld Términos ) - %li Decimales. ] - M8AX\n", terms,
+            fprintf(archi2,
+                    "-------------------------------------------------------------------------------------------------------------------------\n\n");
+            fprintf(archi2, "M8AX - [ Pi - ( %ld Términos ) - %li Decimales. ] - M8AX\n", terms,
                     d);
             for (ju = 48; ju <= 57; ju++) {
                 pcen = (numeris[ju] * 100.000) / d;
@@ -808,13 +825,34 @@ int calcular_pi(long int d, int out) {
                         ju, numeris[ju], pcen, 37, ju, numeris[ju] * (ju - 48));
             }
             fprintf(archi2,
-                    "\n\n... El Dígito Que Más Ha Salido Es El %c. Sale %li Veces, El %.3f%c ...\n",
+                    "\n\n-------------------------------------------------------------------------------------------------------------------------\n");
+            fprintf(archi2,
+                    "\n... El Dígito Que Más Ha Salido Es El %c. Sale %li Veces, El %.3f%c ...\n",
                     ja, maxi, ab, 37);
             fprintf(archi2,
-                    "... El Dígito Que Menos Ha Salido Es El %c. Sale %li Veces, El %.3f%c ...",
+                    "... El Dígito Que Menos Ha Salido Es El %c. Sale %li Veces, El %.3f%c ...\n",
                     jar, minim, bc, 37);
             fprintf(archi2,
-                    "\n\nM8AX - [ Cálculo De %li Dígitos De PI - M.RAM - %.2f MB ] - M8AX\n", d,
+                    "\n-------------------------------------------------------------------------------------------------------------------------\n");
+            fprintf(archi2, "\nM8AX - [ Test De Aleatoriedad Chi-Square: %.4f ] - M8AX\n",
+                    chi_square);
+            if (chi_square < 16.92) {
+                fprintf(archi2,
+                        "M8AX - [ Distribución: EXCELENTE - Distribución De Dígitos Uniforme ( Normalidad CPU / RAM ) ] - M8AX\n");
+                fprintf(archi2,
+                        "M8AX - [ Tu Smartphone Tiene Una Salud Envidiable ] - M8AX\n");
+            } else {
+                fprintf(archi2,
+                        "M8AX - [ Distribución: SOSPECHOSA - ¡ Atención ! Posible Inestabilidad ( Fallo De CPU / RAM ) ] - M8AX\n");
+                fprintf(archi2,
+                        "M8AX - [ Los Dígitos No Están Bien Repartidos. El Cálculo Podría Estar Corrupto Por Fallo De Hardware ] - M8AX\n");
+                fprintf(archi2,
+                        "M8AX - [ Se Recomienda Bajar La Frecuencia O Revisar La Temperatura De Tu Dispositivo ] - M8AX\n");
+            }
+            fprintf(archi2,
+                    "\n-------------------------------------------------------------------------------------------------------------------------\n");
+            fprintf(archi2,
+                    "\nM8AX - [ Cálculo De %li Dígitos De PI - M.RAM - %.2f MB ] - M8AX\n", d,
                     megas);
             fprintf(archi2, "M8AX - [ Algorítmo Del Cálculo - Fórmula De ChudNovSky. ] - M8AX\n");
             fprintf(archi2,
@@ -826,19 +864,19 @@ int calcular_pi(long int d, int out) {
                     (double) qsize / d);
             fprintf(archi2,
                     "M8AX - [ Tiempo Total Del Cálculo. - %lia %lid %lih %lim %lis. ] - M8AX\n",
-                    anos, dias, horas, min, seg);
+                    anoss, diass, horass, minn, segg);
             fprintf(archi2, "M8AX - [ Libros Del Quijote Procesados. - %.3f Libros. ] - M8AX\n",
-                    d / quijote);
+                    (double) d / (double) quijote);
             fprintf(archi2,
                     "M8AX - [ Páginas A5 Del Quijote Procesadas. - %.3f Páginas. ] - M8AX\n",
-                    d / paginas);
+                    (double) d / (double) paginas);
             fprintf(archi2,
                     "M8AX - [ Quijotes Por Segundo Procesados. - %.3f Quijotes/Seg. ] - M8AX\n",
-                    (d / quijote) / ((double) (end - begin) / 1000));
+                    q_seg);
             fprintf(archi2, "M8AX - [ Páginas A5 Por Segundo. - %.3f PgsA5/Seg. ] - M8AX\n",
-                    (d / paginas) / ((double) (end - begin) / 1000));
+                    p_seg);
             fprintf(archi2, "M8AX - [ Decimales De Pi/Seg. - %.3f DecPi/Seg. ] - M8AX\n",
-                    d / ((double) (end - begin) / 1000));
+                    d_seg);
             if (hum2 == 1)
                 fprintf(archi2,
                         "M8AX - [ Minutos Leyendo Los Decimales En Voz Alta - %.5f m. ] - M8AX\n",
@@ -847,28 +885,29 @@ int calcular_pi(long int d, int out) {
                 fprintf(archi2,
                         "M8AX - [ Días Leyendo Los Decimales En Voz Alta - %.5f d. ] - M8AX\n",
                         hum);
-            fprintf(archi2, "M8AX - [ Dígitos En Fila Tamaño 10 ppp Miden - %.5f Km. ] - M8AX\n",
-                    (d * 0.45) / 100000);
+            fprintf(archi2,
+                    "M8AX - [ Decimales De Pi En Fila ( Arial 10 pt ) Miden - %.5f Km. ] - M8AX\n",
+                    ((double) d * 0.25100377) / 100000);
             fprintf(archi2, "M8AX - [ Velocidad En Km/h. - %.5f Km/h. ] - M8AX\n",
-                    ((d * 0.45) / 100000) / (((double) (end - begin) / 1000) / 3600));
+                    v_kmh);
             fprintf(archi2,
                     "M8AX - [ Bolis Bic Gastados Escribiendo Los Decimales - %.5f Bolis. ] - M8AX\n",
-                    ((d * 0.45) / 100) / 1254);
+                    (((double) d * 0.25100377) / 100.0) / 2435.0);
             fprintf(archi2,
                     "M8AX - [ Bolsas De 1Kg De Arroz. Cada Grano Un Dígito. - %.5f Bolsas. ] - M8AX\n",
-                    d / 30000.00000);
+                    (double) d / 30000.00000);
             fprintf(archi2,
                     "M8AX - [ Litros De Agua. 1 Dígito = 1 Gota De Agua - %.5f Litros. ] - M8AX\n",
-                    (d * 0.06) / 1000.00000);
+                    ((double) d * 0.0512) / 1000.00000);
             fprintf(archi2, "M8AX - [ Litros De Agua/Seg Procesados. - %.5f Litros/Seg. ] - M8AX\n",
-                    (d * 0.06) / 1000.00000 / ((double) (end - begin) / 1000));
+                    l_seg);
             fprintf(archi2, "M8AX - [ Suma De Todos Los Decimales. 3.14159 = 20. - %li. ] - M8AX\n",
                     sumd);
             fprintf(archi2,
                     "\n-------------------------------------------------------------------------------------------------------------------------\n\n"
                     "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f. ] - M8AX\n"
                     "M8AX - [ Referencia: 100 Puntos = 10.000.000 Decimales/Segundo ]\n"
-                    "M8AX - [ Histórico: Mi 9 Lite = 6.506 | S4 Mini = 1.285 ]\n\n"
+                    "M8AX - [ Histórico: Mi 9 Lite = 5.506 | S4 Mini = 1.285 ]\n\n"
                     "-------------------------------------------------------------------------------------------------------------------------\n",
                     indv);
             time_t t = time(NULL);
@@ -876,22 +915,41 @@ int calcular_pi(long int d, int out) {
             int anio_actual = tm.tm_year + 1900;
             char *anio_romano = convertirARomano(anio_actual);
             fprintf(archi2,
-                    "\n.........................................................................................................................\n\nProgramado Por MarcoS OchoA DieZ En C++ Y Kotlin\nMail - mviiiax.m8ax@gmail.com\nCanal De YouTube - http://youtube.com/m8ax\nDonaciones PayPal - mviiiax.m8ax@hotmail.es\nCreado Y Compilado En Portátil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n\nGrácias Por Usar M8AX - Mega PI v10.03.77\nPrograma Dedicado A MDDD, Mi Madre...\n\n");
+                    "\nProgramado Por MarcoS OchoA DieZ En C++ Y Kotlin\nMail - mviiiax.m8ax@gmail.com\nCanal De YouTube - http://youtube.com/m8ax\nDonaciones PayPal - mviiiax.m8ax@hotmail.es\nCreado En Portátil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n\nGrácias Por Usar M8AX - Mega PI v10.03.77\nPrograma Dedicado A MDDD, Mi Madre...\n");
+            time_t tt = time(NULL);
+            struct tm tmm = *localtime(&t);
+            fprintf(archi2, "Fecha: %02d/%02d/%d - Hora: %02d:%02d:%02d\n\n",
+                    tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900,
+                    tm.tm_hour, tm.tm_min, tm.tm_sec);
             fprintf(archi2,
-                    "......................................... MvIiIaX Corp. %d - %s  ...........................................",
+                    "............................................ MvIiIaX Corp. %d - %s  ...............................................",
                     anio_actual,
                     anio_romano);
             fclose(archi2);
         }
         printf("------------------------------------------------------------------------\n");
+        puts("");
         printf("M8AX - [ Suma De Todos Los Decimales. 3.14159 = 20. - %li. ] - M8AX\n", sumd);
         printf("------------------------------------------------------------------------\n\n");
     }
     if (out == 8) {
-        printf("\nM8AX - [ Pi - ( 0,%ld Términos ) - %li Decimales. ] - M8AX\n\n", terms, d);
+        printf("\nM8AX - [ Pi - ( %ld Términos ) - %li Decimales. ] - M8AX\n\n", terms, d);
         mpf_out_str(stdout, 10, d + 2, qi);
         printf("\n\n");
     }
+    printf("..........................................................................");
+    puts("");
+    printf("M8AX - [ Últimos 1000 Dígitos Calculados Del Número Pi ] - M8AX");
+    puts("");
+    mp_exp_t exp_final;
+    char *str_final = mpf_get_str(NULL, &exp_final, 10, d + 10, qi);
+    if (str_final) {
+        long inicio = (d > 1000) ? (d - 1000) : 0;
+        printf("%.1000s\n", str_final + 1 + inicio);
+        fflush(stdout);
+        free(str_final);
+    }
+    puts("");
     mpf_clear(pi);
     mpf_clear(qi);
     mpf_clear(t1);
@@ -901,16 +959,27 @@ int calcular_pi(long int d, int out) {
     int anio_actual = tm.tm_year + 1900;
     char *anio_romano = convertirARomano(anio_actual);
     printf("..........................................................................");
+    puts("");
     puts("Programado Por MarcoS OchoA DieZ En C++ Y Kotlin\n");
     puts("Mail - mviiiax.m8ax@gmail.com\n");
     puts("Canal De YouTube - http://youtube.com/m8ax\n");
     puts("Donaciones PayPal - mviiiax.m8ax@hotmail.es\n");
-    puts("Creado Y Compilado En Portatil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n");
-    puts("..........................................................................\n");
-    puts("Grácias Por Usar M8AX - Mega PI v10.03.77\n");
-    puts("Programa Dedicado A MDDD, Mi Madre...\n");
+    puts("Creado En Portatil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n");
     puts("");
+    puts("..........................................................................\n");
+    puts("");
+    puts("Grácias Por Usar M8AX - Mega PI v10.03.77\n");
+    puts("Programa Dedicado A MDDD, Mi Madre...");
+    time_t tt = time(NULL);
+    struct tm tmm = *localtime(&t);
+    printf("Fecha: %02d/%02d/%d - Hora: %02d:%02d:%02d\n",
+           tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900,
+           tm.tm_hour, tm.tm_min, tm.tm_sec);
+    puts("");
+    puts("..........................................................................\n\n");
+    puts("..........................................................................\n");
     printf("...................... MvIiIaX Corp. %d - %s .......................", anio_actual,
            anio_romano);
+    puts("..........................................................................");
     return 0;
 }
