@@ -46,6 +46,14 @@
             android:exported="false"
             android:screenOrientation="landscape"
             tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".TetrisActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".AstronomiaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
