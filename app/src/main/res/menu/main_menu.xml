@@ -6,13 +6,40 @@
         android:title="● Borrar Archivo Generado M8AX_Pi.txt"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_chess"
-        android:title="● Juega Al Ajedrez - ( Tú vs CPU )"
+        android:id="@+id/action_loop_toggle"
+        android:checkable="true"
+        android:title="● Modo Bucle - ( Loop )"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_pong"
-        android:title="● Juega Al Pong - ( Tú vs CPU )"
+        android:id="@+id/action_stop"
+        android:title="● Detener Cálculos"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_astros"
+        android:title="● Observatorio Astronómico"
+        app:showAsAction="never" />
+    <item
+        android:title="◼ Juegos"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_tetris"
+                android:title="● Juega Al Tetris"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_chess"
+                android:title="● Juega Al Ajedrez - ( Tú vs CPU )"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_pong"
+                android:title="● Juega Al Pong - ( Tú vs CPU )"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/M8AX_Menu_TTS"
+        android:checkable="true"
+        android:title="● Voz TTS Activada" />
     <item
         android:id="@+id/action_ayuda"
         android:title="● Ayuda Técnica"
