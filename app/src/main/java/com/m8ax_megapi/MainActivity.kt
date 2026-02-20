@@ -3,6 +3,8 @@ package com.m8ax_megapi
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -12,6 +14,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.speech.tts.TextToSpeech
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
@@ -37,16 +40,21 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
+import java.util.Locale
 import java.util.Random
 
 class MainActivity : AppCompatActivity() {
     private var ramTotalGB: Double = 0.0
     private var calculando = false
-    private var currentTextSize = 9f
+    private var currentTextSize = 8f
     private var contadorespe = 0
     private var ultimosMillonesPulsados: String = ""
+    private var modoLoopActivo = false
     private var colorAnim: ObjectAnimator? = null
     private lateinit var tvNotaRam: TextView
+    private var tts: TextToSpeech? = null
+    private var ttsEnabled: Boolean = false
+    private var contadorLoop = 1
     private val botonesPiIds = listOf(
         R.id.btn1M,
         R.id.btn2M,
@@ -72,11 +80,11 @@ class MainActivity : AppCompatActivity() {
         R.id.btn800M,
         R.id.btn900M,
         R.id.btn1000M,
+        R.id.btn1200M,
+        R.id.btn1400M,
+        R.id.btn1600M,
+        R.id.btn1800M,
         R.id.btn2000M,
-        R.id.btn3000M,
-        R.id.btn4000M,
-        R.id.btn5000M,
-        R.id.btn10000M,
         R.id.btnCompartir
     )
 
@@ -95,6 +103,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ttsEnabled = CargarEstadoTts()
         setContentView(R.layout.activity_main)
         val mainView = findViewById<View>(R.id.main_container)
         mainView?.let { vista ->
@@ -104,12 +113,61 @@ class MainActivity : AppCompatActivity() {
                 insets
             }
         }
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.setLanguage(tts?.defaultLanguage ?: Locale.getDefault())
+                tts?.setSpeechRate(0.9f)
+                if (ttsEnabled) {
+                    val saludos = arrayOf(
+                        "Motor En Marcha.",
+                        "M 8 A X; Listo.",
+                        "Sistema Iniciado.",
+                        "Hola Que Tal.",
+                        "Motor Preparado."
+                    )
+                    tts?.speak(saludos.random(), TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+                }
+            }
+        }
         val tvConsola = findViewById<TextView>(R.id.tvConsolaM8AX)
+        tvConsola.setOnClickListener {
+            if (!calculando) {
+                val textoACopiar = tvConsola.text.toString()
+                if (textoACopiar.isNotEmpty()) {
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("M8AX_DATA", textoACopiar)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(
+                        this, "M8AX - Contenido Copiado Al Portapapeles", Toast.LENGTH_SHORT
+                    ).show()
+                    if (ttsEnabled) {
+                        tts?.speak(
+                            "Contenido Copiado Al Portapapeles.",
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "ttsId"
+                        )
+                    }
+                }
+            } else {
+                if (ttsEnabled) {
+                    tts?.speak(
+                        "Espera Que Termine El Cálculo; Para Copiar Al Portapapeles.",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "ttsId"
+                    )
+                }
+                Toast.makeText(
+                    this, "M8AX - Espera A Que Termine El Cálculo Para Copiar", Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
         val scaleDetector = android.view.ScaleGestureDetector(
             this, object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
                     currentTextSize *= detector.scaleFactor
-                    currentTextSize = currentTextSize.coerceIn(9f, 60f)
+                    currentTextSize = currentTextSize.coerceIn(8f, 60f)
                     tvConsola.textSize = currentTextSize
                     return true
                 }
@@ -132,20 +190,84 @@ class MainActivity : AppCompatActivity() {
         gestionarBotonera(true)
     }
 
-    private fun startParpadeo(textView: TextView) {
+    private fun GuardarEstadoTts(estado: Boolean) {
+        val prefs = getSharedPreferences("M8AX-ConfigTTS", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putBoolean("TtsActivado", estado)
+        editor.apply()
+    }
+
+    private fun CargarEstadoTts(): Boolean {
+        val prefs = getSharedPreferences("M8AX-ConfigTTS", Context.MODE_PRIVATE)
+        return prefs.getBoolean("TtsActivado", true)
+    }
+
+    private fun startParpadeo(textView: TextView, boton: Button?) {
         colorAnim = ObjectAnimator.ofInt(
             textView, "textColor", Color.parseColor("#FF9800"), Color.parseColor("#FFFFFF")
-        )
-        colorAnim?.duration = 500
-        colorAnim?.setEvaluator(ArgbEvaluator())
-        colorAnim?.repeatCount = ValueAnimator.INFINITE
-        colorAnim?.repeatMode = ValueAnimator.REVERSE
-        colorAnim?.start()
+        ).apply {
+            duration = 500
+            setEvaluator(ArgbEvaluator())
+            repeatCount = ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            start()
+        }
+        boton?.let {
+            val animBoton = ObjectAnimator.ofInt(
+                it, "textColor", Color.parseColor("#FF9800"), Color.parseColor("#FFFFFF")
+            ).apply {
+                duration = 500
+                setEvaluator(ArgbEvaluator())
+                repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.REVERSE
+                start()
+            }
+            it.tag = animBoton
+        }
     }
 
     private fun stopParpadeo(textView: TextView) {
         colorAnim?.cancel()
         textView.setTextColor(Color.parseColor("#FF9800"))
+        botonesPiIds.forEach { id ->
+            val btn = findViewById<Button>(id)
+            (btn?.tag as? ObjectAnimator)?.cancel()
+            btn?.tag = null
+            btn?.setTextColor(if (id == R.id.btn10M) Color.BLACK else Color.WHITE)
+        }
+    }
+
+    private fun detenerCalculoM8AX() {
+        if (!calculando) {
+            if (ttsEnabled) tts?.speak(
+                "No Hay Nada Que Detener. No Hay Cálculo De Pi En Curso.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "ttsStopId"
+            )
+            Toast.makeText(this, "M8AX - No Hay Ningún Cálculo Activo", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("M8AX - DETENER MOTOR - M8AX")
+        builder.setMessage("Para Detener Los Cálculos Es Necesario Reiniciar El Motor. ¿ Estás Seguro ?")
+        builder.setPositiveButton("SÍ, DETENER") { _, _ ->
+            if (ttsEnabled) {
+                tts?.speak("Okey.", TextToSpeech.QUEUE_FLUSH, null, "ttsStopId")
+                Thread.sleep(600)
+            }
+            val intent = Intent(this, MainActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(intent)
+            android.os.Process.killProcess(android.os.Process.myPid())
+            System.exit(0)
+        }
+        builder.setNegativeButton("NO, CONTINUAR") { _, _ ->
+            if (ttsEnabled) {
+                tts?.speak("Vale.", TextToSpeech.QUEUE_FLUSH, null, "ttsStopId")
+            }
+        }
+        builder.create().show()
     }
 
     private fun gestionarBotonera(activar: Boolean) {
@@ -175,11 +297,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.btn800M to 800L,
                 R.id.btn900M to 900L,
                 R.id.btn1000M to 1000L,
+                R.id.btn1200M to 1200L,
+                R.id.btn1400M to 1400L,
+                R.id.btn1600M to 1600L,
+                R.id.btn1800M to 1800L,
                 R.id.btn2000M to 2000L,
-                R.id.btn3000M to 3000L,
-                R.id.btn4000M to 4000L,
-                R.id.btn5000M to 5000L,
-                R.id.btn10000M to 10000L
             )
             val colorAzul = android.content.res.ColorStateList.valueOf(Color.parseColor("#2196F3"))
             val colorOscuro =
@@ -195,6 +317,15 @@ class MainActivity : AppCompatActivity() {
                         btn.backgroundTintList = colorGrisCalculando
                         btn.setTextColor(Color.GRAY)
                         btn.setOnClickListener {
+                            if (ttsEnabled) {
+                                tts?.speak(
+                                    "Espera A Que Termine El Cálculo Actual.",
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null,
+                                    "ttsStopId"
+                                )
+                                Thread.sleep(600)
+                            }
                             Toast.makeText(
                                 this,
                                 "M8AX - Espera A Que Termine El Cálculo Actual",
@@ -217,24 +348,24 @@ class MainActivity : AppCompatActivity() {
                         var bloqueadoPorRam = false
                         var ramNecesaria = 0.0
                         when {
-                            millones >= 10000 -> {
-                                ramNecesaria = 64.0; if (ramTotalGB < 64.0) bloqueadoPorRam = true
-                            }
-
-                            millones >= 5000 -> {
-                                ramNecesaria = 32.0; if (ramTotalGB < 32.0) bloqueadoPorRam = true
-                            }
-
-                            millones >= 4000 -> {
-                                ramNecesaria = 28.0; if (ramTotalGB < 28.0) bloqueadoPorRam = true
-                            }
-
-                            millones >= 3000 -> {
-                                ramNecesaria = 24.0; if (ramTotalGB < 24.0) bloqueadoPorRam = true
-                            }
-
                             millones >= 2000 -> {
                                 ramNecesaria = 16.0; if (ramTotalGB < 16.0) bloqueadoPorRam = true
+                            }
+
+                            millones >= 1800 -> {
+                                ramNecesaria = 14.8; if (ramTotalGB < 14.8) bloqueadoPorRam = true
+                            }
+
+                            millones >= 1600 -> {
+                                ramNecesaria = 13.6; if (ramTotalGB < 13.6) bloqueadoPorRam = true
+                            }
+
+                            millones >= 1400 -> {
+                                ramNecesaria = 12.4; if (ramTotalGB < 12.4) bloqueadoPorRam = true
+                            }
+
+                            millones >= 1200 -> {
+                                ramNecesaria = 11.2; if (ramTotalGB < 11.2) bloqueadoPorRam = true
                             }
 
                             millones >= 1000 -> {
@@ -309,6 +440,14 @@ class MainActivity : AppCompatActivity() {
                             btn.backgroundTintList = colorOscuro
                             btn.setTextColor(Color.DKGRAY)
                             btn.setOnClickListener {
+                                if (ttsEnabled) {
+                                    tts?.speak(
+                                        "RAM Insuficiente, Necesitas Más De ${ramNecesaria}GB",
+                                        TextToSpeech.QUEUE_FLUSH,
+                                        null,
+                                        "ttsStopId"
+                                    )
+                                }
                                 Toast.makeText(
                                     this,
                                     "M8AX - RAM Insuficiente (Necesitas > ${ramNecesaria}GB)",
@@ -428,7 +567,7 @@ class MainActivity : AppCompatActivity() {
         })
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val formatoCompilacion = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-        val fechaCompilacion = LocalDateTime.parse("17/02/2026 17:25", formatoCompilacion)
+        val fechaCompilacion = LocalDateTime.parse("20/02/2026 12:25", formatoCompilacion)
         val ahora = LocalDateTime.now()
         val (años, dias, horas, minutos, segundos) = if (ahora.isBefore(fechaCompilacion)) {
             listOf(0L, 0L, 0L, 0L, 0L)
@@ -444,10 +583,9 @@ class MainActivity : AppCompatActivity() {
             listOf(a, d, h, m, s)
         }
         val tiempoTranscurrido =
-            "... Fecha De Compilación - 17/02/2026 17:25 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
-        val prefs = getSharedPreferences("M8AX-Dejar_De_Fumar", Context.MODE_PRIVATE)
+            "... Fecha De Compilación - 20/02/2026 12:25 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
         val textoIzquierda = SpannableString(
-            "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 17h De Programación ...\n\n" + "... Con +/- 3500 Líneas De Código ...\n\n" + "... +/- 200 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
+            "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 27h De Programación ...\n\n" + "... Con +/- 4500 Líneas De Código ...\n\n" + "... +/- 250 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
         )
         val textoCentro = SpannableString(
             "| AND | OR | NOT | Ax = b | 0 - 1 |\n\n" + "M8AX CORP. $currentYear - ${
@@ -570,6 +708,9 @@ class MainActivity : AppCompatActivity() {
                 player.start()
                 player.setOnCompletionListener { mp -> mp.release() }
                 val mensaje = mensajes.random()
+                tts?.speak(
+                    "Huevito De Pascua. " + mensaje, TextToSpeech.QUEUE_FLUSH, null, "ttsStopId"
+                )
                 AlertDialog.Builder(this@MainActivity).setTitle("¡ Huevito De Pascua !")
                     .setMessage("$mensaje\n\nhttps://youtube.com/m8ax")
                     .setPositiveButton("OK", null).show()
@@ -657,7 +798,17 @@ class MainActivity : AppCompatActivity() {
         logCompleto.setLength(0)
         var lineaIndiceFinal = ""
         txtStatus.text = "M8AX - Motor En Marcha..."
-        startParpadeo(tvNotaRam)
+        val botonActual = botonesPiIds.mapNotNull { findViewById<Button>(it) }
+            .find { it.text.toString() == ultimosMillonesPulsados }
+        startParpadeo(tvNotaRam, botonActual)
+        if (ttsEnabled && !modoLoopActivo) {
+            tts?.speak(
+                "Calculando ${ultimosMillonesPulsados}illones De Decimales De Pi.",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "ttsStopId"
+            )
+        }
         gestionarBotonera(false)
         calculando = true
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -675,6 +826,7 @@ class MainActivity : AppCompatActivity() {
                         startCalculation(decimales)
                         Thread.sleep(2000)
                         runOnUiThread {
+                            if (!calculando && !modoLoopActivo) return@runOnUiThread
                             val activityManager =
                                 getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
                             val memoryInfo = android.app.ActivityManager.MemoryInfo()
@@ -687,19 +839,65 @@ class MainActivity : AppCompatActivity() {
                             }GB"
                             calculando = false
                             stopParpadeo(tvNotaRam)
-                            gestionarBotonera(true)
-                            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                            android.app.AlertDialog.Builder(this@MainActivity)
-                                .setTitle("M8AX MEGA PI BENCHMARK").setMessage(
-                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\n" + (if (lineaIndiceFinal.isNotEmpty()) lineaIndiceFinal else "Cálculo Completado")
-                                ).setPositiveButton("ACEPTAR", null).show()
+                            if (modoLoopActivo) {
+                                contadorLoop++
+                                val mensajeLoop = "Iniciando Test, Número $contadorLoop."
+                                if (ttsEnabled) {
+                                    tts?.speak(
+                                        mensajeLoop, TextToSpeech.QUEUE_FLUSH, null, "ttsStopId"
+                                    )
+                                }
+                                Toast.makeText(
+                                    this@MainActivity, "M8AX - $mensajeLoop", Toast.LENGTH_SHORT
+                                ).show()
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    if (modoLoopActivo) lanzarMotorM8AX(decimales)
+                                }, 500)
+                            } else {
+                                gestionarBotonera(true)
+                                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                                contadorLoop = 1
+                                val textoConsola = tvConsola.text.toString()
+                                val lineaChi = textoConsola.lines()
+                                    .findLast { it.contains("Test De Aleatoriedad Chi-Square:") }
+                                val numeroChi =
+                                    lineaChi?.substringAfter("Chi-Square: ")?.substringBefore(" ]")
+                                        ?.trim() ?: "0.0000"
+                                val chiDouble = numeroChi.toDoubleOrNull() ?: 0.0
+                                val saludEstado = if (chiDouble < 16.92) "Buena." else "Baja."
+                                val fraseSinMotor = lineaIndiceFinal.replace("M8AX", "")
+                                val soloNumero =
+                                    fraseSinMotor.filter { it.isDigit() || it == '.' }.trim()
+                                        .replace(".", ",")
+                                val mensajeVoz =
+                                    "Cálculo Terminado. Índice De Velocidad Para ${ultimosMillonesPulsados}illones De Decimales De Pi En Tu Móvil: $soloNumero. Prueba De Bondad De Ajuste De Chi Cuadrado De Pearson; $numeroChi. Salud De C P U Y Ram, $saludEstado Grácias Por Usar M 8 A X; Mega Pi."
+                                val mensajePantalla =
+                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\nChi-Square: $numeroChi\n\nSalud De ( CPU / RAM ) - $saludEstado\n\n$lineaIndiceFinal\n\nReferencias De Algunos SOC:\n\nQualcomm Snapdragon 400 - 1.285 Puntos.\n\nQualcomm Snapdragon 710 - 5.506 Puntos."
+                                if (ttsEnabled) {
+                                    tts?.stop()
+                                    Thread.sleep(200)
+                                    tts?.speak(
+                                        mensajeVoz, TextToSpeech.QUEUE_FLUSH, null, "ttsResultId"
+                                    )
+                                }
+                                val alerta = android.app.AlertDialog.Builder(this@MainActivity)
+                                    .setTitle("--- M8AX MEGA PI BENCHMARK ---")
+                                    .setMessage(mensajePantalla).setPositiveButton("ACEPTAR", null)
+                                    .show()
+                                val textView = alerta.findViewById<TextView>(android.R.id.message)
+                                textView?.textSize = 15f
+                            }
                         }
                     } catch (e: Exception) {
                         calculando = false
                     }
                 }.start()
                 while (calculando) {
-                    val linea = reader.readLine() ?: break
+                    val linea = try {
+                        reader.readLine()
+                    } catch (e: Exception) {
+                        null
+                    } ?: break
                     if (!linea.contains("beginning of") && !linea.startsWith("---------")) {
                         if (linea.contains("Índice De Velocidad De Tu Móvil")) {
                             lineaIndiceFinal = linea
@@ -711,9 +909,18 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                reader.close()
-                procesoLog.destroy()
-                Runtime.getRuntime().exec(arrayOf("sh", "-c", "pkill -9 logcat"))
+                try {
+                    reader.close()
+                } catch (e: Exception) {
+                }
+                try {
+                    procesoLog.destroy()
+                } catch (e: Exception) {
+                }
+                try {
+                    Runtime.getRuntime().exec(arrayOf("sh", "-c", "pkill -9 logcat"))
+                } catch (e: Exception) {
+                }
             } catch (e: Exception) {
                 runOnUiThread { gestionarBotonera(true) }
             }
@@ -722,6 +929,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+        val item = menu?.findItem(R.id.M8AX_Menu_TTS)
+        item?.isChecked = ttsEnabled
+        if (ttsEnabled) {
+            item?.title = "● Audio TTS Activado"
+        } else {
+            item?.title = "● Audio TTS Desactivado"
+        }
         return true
     }
 
@@ -747,20 +961,48 @@ class MainActivity : AppCompatActivity() {
         }
         val tvContent = TextView(this).apply {
             text =
-                "M8AX MegaPi: Suite De Diagnóstico Extremo.\n\n" + "• Algoritmo Principal: Implementación Chudnovsky (C Nativo).\n" + "• Multiplicación: Basada En FFT (Transformada Rápida De Fourier).\n" + "• Inversión/División: Método De Newton.\n" + "• Optimización: División Binaria (Binary Splitting).\n\n" + "• Cálculo: Decimales De Pi Con Precisión Arbitraria.\n\n" + "• Propósito 1: Test De Estrés Térmico Para CPU Y RAM.\n" + "• Propósito 2: Test De Estabilidad De CPU Y RAM.\n" + "• Propósito 3: Test De Velocidad De Cálculo De Tu Móvil.\n\n" + "• Nota: Puedes Seleccionar Cualquier Test 2M 10M 60M, Etc...\n\n" + "• 10M Es El Más Normalizado Para Comparar Rendimiento Entre Dispositivos.\n\n" + "• Librerías: Gestión Mediante GMP ( GNU Multi-Precision Library ).\n\n" + "Este Benchmark Lleva El Hardware Al Límite Operativo. En La Consola, Tienes Todo Tipo De Datos Estadísticos."
+                "M8AX MegaPi: Suite De Diagnóstico Extremo.\n\n" + "• Algoritmo Principal: Implementación Chudnovsky (C Nativo).\n" + "• Multiplicación: Basada En FFT (Transformada Rápida De Fourier).\n" + "• Inversión/División: Método De Newton.\n" + "• Optimización: División Binaria (Binary Splitting).\n\n" + "• Cálculo: Decimales De Pi Con Precisión Arbitraria.\n\n" + "• Propósito 1: Test De Estrés Térmico Para CPU Y RAM.\n" + "• Propósito 2: Test De Estabilidad De CPU Y RAM.\n" + "• Propósito 3: Test De Velocidad De Cálculo De Tu Móvil.\n\n" + "• Nota 1: Puedes Seleccionar Cualquier Test 2M 10M 60M, Etc...\n\n" + "• Nota 2: Activa El Modo Loop Para Repetir Continuamente El Test Que Selecciones, Ideal Para Detectar Inestabilidades De Voltaje, Medir El Impacto En La Salud De La Batería Bajo Carga Extrema Y Analizar El 'Thermal Throttling' Del Procesador En Sesiones De Estrés Prolongadas.\n\n" + "• 10M Es El Más Normalizado Para Comparar Rendimiento Entre Dispositivos.\n\n" + "• Librerías: Gestión Mediante GMP ( GNU Multi-Precision Library ).\n\n" + "Este Benchmark Lleva El Hardware Al Límite Operativo. En La Consola, Tienes Todo Tipo De Datos Estadísticos."
             setTextColor(Color.WHITE)
             textSize = 16f
             gravity = Gravity.START
+        }
+        val buttonLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, 20, 0, 0)
+        }
+        val btnSpeak = Button(this).apply {
+            text = "LEER POR VOZ"
+            setBackgroundColor(Color.parseColor("#4CAF50"))
+            setTextColor(Color.WHITE)
+            setOnClickListener {
+                if (ttsEnabled) {
+                    tts?.stop()
+                    tts?.speak(tvContent.text.toString(), TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+            }
         }
         val btnClose = Button(this).apply {
             text = "ENTENDIDO"
             setBackgroundColor(Color.parseColor("#2196F3"))
             setTextColor(Color.WHITE)
-            setOnClickListener { dialog.dismiss() }
+            setOnClickListener {
+                if (ttsEnabled) {
+                    tts?.speak("Okey.", TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+                dialog.dismiss()
+            }
+        }
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(10, 0, 10, 0)
         }
         layout.addView(tvTitle)
         layout.addView(tvContent)
-        layout.addView(btnClose)
+        buttonLayout.addView(btnSpeak, params)
+        buttonLayout.addView(btnClose, params)
+        layout.addView(buttonLayout)
         scroll.addView(layout)
         dialog.setContentView(scroll)
         dialog.window?.setLayout(
@@ -775,32 +1017,122 @@ class MainActivity : AppCompatActivity() {
             val fichero = File(getExternalFilesDir(null), "M8AX_Pi.txt")
             if (fichero.exists()) {
                 fichero.delete()
+                if (ttsEnabled) {
+                    tts?.speak("Archivo Eliminado.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+                }
                 Toast.makeText(this, "M8AX - Archivo M8AX_Pi.txt Eliminado", Toast.LENGTH_SHORT)
                     .show()
             } else {
+                if (ttsEnabled) {
+                    tts?.speak(
+                        "No Hay Archivo Para Borrar.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                    )
+                }
                 Toast.makeText(this, "M8AX - No Hay Archivo Para Borrar", Toast.LENGTH_SHORT).show()
             }
             return true
         }
+        if (item.itemId == R.id.action_loop_toggle) {
+            modoLoopActivo = !modoLoopActivo
+            item.isChecked = modoLoopActivo
+            contadorLoop = 1
+            val estado = if (modoLoopActivo) "Activado" else "Desactivado"
+            Toast.makeText(
+                this, "M8AX - Loop: ${if (modoLoopActivo) "ON" else "OFF"}", Toast.LENGTH_SHORT
+            ).show()
+            if (ttsEnabled) {
+                tts?.speak("Loop $estado.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
+            return true
+        }
         if (item.itemId == R.id.action_ayuda) {
+            if (ttsEnabled) {
+                tts?.speak("Ayuda Técnica.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
             mostrarDialogoAyuda()
             return true
         }
         if (item.itemId == R.id.action_acerca_de) {
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Acerca De M 8 A X Mega Pi.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                )
+            }
             showAboutDialog()
             return true
         }
         if (item.itemId == R.id.action_chess) {
             val intent = Intent(this, ChessActivity::class.java)
+            if (ttsEnabled) {
+                tts?.speak("Juguemos Al Ajedrez.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
             startActivity(intent)
             return true
         }
         if (item.itemId == R.id.action_pong) {
             val intent = Intent(this, ThePong::class.java)
+            if (ttsEnabled) {
+                tts?.speak("Juguemos Al Pong.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
             startActivity(intent)
             return true
         }
+        if (item.itemId == R.id.action_astros) {
+            val intent = Intent(this, AstronomiaActivity::class.java)
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Observatorio Astronómico.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                )
+            }
+            startActivity(intent)
+            return true
+        }
+        if (item.itemId == R.id.action_tetris) {
+            val intent = Intent(this, TetrisActivity::class.java)
+            intent.putExtra("ttsEnabled", ttsEnabled)
+            if (ttsEnabled) {
+                tts?.speak("Juguemos Al Tetris.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
+            startActivity(intent)
+            return true
+        }
+        if (item.itemId == R.id.action_stop) {
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Detenemos EL Cálculo; Si O No...",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "ttsTetrisId"
+                )
+            }
+            detenerCalculoM8AX()
+            return true
+        }
+        if (item.itemId == R.id.M8AX_Menu_TTS) {
+            ttsEnabled = !ttsEnabled
+            GuardarEstadoTts(ttsEnabled)
+            item.isChecked = ttsEnabled
+            if (ttsEnabled) {
+                item.title = "● Audio TTS Activado"
+                Toast.makeText(this, "M8AX - Audio Activado", Toast.LENGTH_SHORT).show()
+                tts?.stop()
+                tts?.speak("Activado", TextToSpeech.QUEUE_FLUSH, null, "ttsId")
+            } else {
+                item.title = "● Audio TTS Desactivado"
+                tts?.stop()
+                tts?.speak("Desactivado", TextToSpeech.QUEUE_FLUSH, null, "ttsId")
+                Handler(Looper.getMainLooper()).postDelayed({ tts?.stop() }, 2000)
+                Toast.makeText(this, "M8AX - Audio Desactivado", Toast.LENGTH_SHORT).show()
+            }
+            return true
+        }
         if (item.itemId == R.id.action_salir) {
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Cerrando Sistema; Adiós.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                )
+                Thread.sleep(2200)
+            }
             calculando = false
             try {
                 Runtime.getRuntime().exec(arrayOf("sh", "-c", "pkill -9 logcat"))
@@ -815,6 +1147,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun compartirArchivo() {
         if (calculando) {
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Espera Que El Cálculo Termine.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                )
+            }
             Toast.makeText(
                 this, "M8AX - Espera A Que Termine El Cálculo Actual", Toast.LENGTH_SHORT
             ).show()
@@ -822,12 +1159,18 @@ class MainActivity : AppCompatActivity() {
         }
         val fichero = File(getExternalFilesDir(null), "M8AX_Pi.txt")
         if (!fichero.exists()) {
+            if (ttsEnabled) {
+                tts?.speak("Calcula Pi Primero.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
             Toast.makeText(
                 this, "M8AX - ¡ Calcula PI Primero !", Toast.LENGTH_LONG
             ).show()
             return
         }
         try {
+            if (ttsEnabled) {
+                tts?.speak("Compartir...", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
+            }
             val uri = FileProvider.getUriForFile(this, "com.m8ax_megapi.fileprovider", fichero)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -839,10 +1182,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (ttsEnabled) {
+            tts?.stop()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         colorAnim?.cancel()
         colorAnim = null
+        tts?.stop()
+        tts?.shutdown()
         android.os.Process.killProcess(android.os.Process.myPid())
     }
 }

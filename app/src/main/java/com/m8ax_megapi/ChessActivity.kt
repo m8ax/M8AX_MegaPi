@@ -2,10 +2,12 @@ package com.m8ax_megapi
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.speech.tts.TextToSpeech
 import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -19,6 +21,7 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Locale
 
 class ChessActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -26,9 +29,12 @@ class ChessActivity : AppCompatActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
     private val client = OkHttpClient()
+    private var ttsEnabled = false
+    private var tts: TextToSpeech? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ttsEnabled = CargarEstadoTts()
         setContentView(R.layout.activity_chess)
         webView = findViewById(R.id.webViewChess)
         tvStarWars = findViewById(R.id.tvStarWars)
@@ -39,6 +45,12 @@ class ChessActivity : AppCompatActivity() {
         mediaPlayer = MediaPlayer.create(this, R.raw.m8axsonidofondo)
         mediaPlayer?.isLooping = true
         mediaPlayer?.start()
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.setLanguage(tts?.defaultLanguage ?: Locale.getDefault())
+                tts?.setSpeechRate(0.9f)
+            }
+        }
         fetchRandomQuote()
         startFetchingFrases()
         btnNewGame.setOnClickListener {
@@ -50,6 +62,11 @@ class ChessActivity : AppCompatActivity() {
             mediaPlayer?.start()
             fetchRandomQuote()
         }
+    }
+
+    private fun CargarEstadoTts(): Boolean {
+        val prefs = getSharedPreferences("M8AX-ConfigTTS", Context.MODE_PRIVATE)
+        return prefs.getBoolean("TtsActivado", true)
     }
 
     private fun capitalizarCadaPalabra(texto: String): String {
@@ -88,6 +105,11 @@ class ChessActivity : AppCompatActivity() {
                         val displayText = "$quoteText\n\n$author"
                         runOnUiThread {
                             showStarWarsText(displayText)
+                            if (ttsEnabled) {
+                                tts?.speak(
+                                    displayText, TextToSpeech.QUEUE_FLUSH, null, "ttsQuoteId"
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         runOnUiThread {
@@ -134,5 +156,8 @@ class ChessActivity : AppCompatActivity() {
         mediaPlayer?.release()
         mediaPlayer = null
         handler.removeCallbacksAndMessages(null)
+        tts?.stop()
+        tts?.shutdown()
+        tts = null
     }
 }

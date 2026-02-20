@@ -100,7 +100,7 @@ class SplashActivity : AppCompatActivity() {
                 "M8AX: ¿ Tu Chip Está Preparado ?",
                 "Test De Estrés: Máxima Frecuencia",
                 "Optimizando Cálculo En Punto Flotante",
-                "Detectando Límites Térmicos Del Reloj",
+                "Detectando Límites Térmicos Del Terminal",
                 "¡ Cuidado ! Hardware En Máximo Rendimiento",
                 "Analizando Capacidad De Cálculo Paralelo",
                 "M8AX: Extracción De Decimales Al 100%",
@@ -131,12 +131,14 @@ class SplashActivity : AppCompatActivity() {
         )
         val videoLogos = arrayOf(
             R.raw.m8axvideo1,
+            R.raw.m8axvideo2,
             R.raw.m8axvideo3,
             R.raw.m8axvideo4,
             R.raw.m8axvideo5,
             R.raw.m8axvideo6,
             R.raw.m8axvideo7,
-            R.raw.m8axvideo8
+            R.raw.m8axvideo8,
+            R.raw.m8axvideo9
         )
         if (Math.random() < 0.5) {
             logoImage.visibility = View.VISIBLE
