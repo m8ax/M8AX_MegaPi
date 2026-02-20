@@ -378,7 +378,7 @@
                 android:textSize="14sp" />
 
             <Button
-                android:id="@+id/btn2000M"
+                android:id="@+id/btn1200M"
                 android:layout_width="0dp"
                 android:layout_height="35dp"
                 android:layout_margin="1dp"
@@ -387,7 +387,7 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="0dp"
-                android:text="2000M"
+                android:text="1200M"
                 android:textSize="14sp" />
         </LinearLayout>
 
@@ -398,7 +398,7 @@
             android:weightSum="5">
 
             <Button
-                android:id="@+id/btn3000M"
+                android:id="@+id/btn1400M"
                 android:layout_width="0dp"
                 android:layout_height="35dp"
                 android:layout_margin="1dp"
@@ -407,11 +407,11 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="0dp"
-                android:text="3000M"
+                android:text="1400M"
                 android:textSize="14sp" />
 
             <Button
-                android:id="@+id/btn4000M"
+                android:id="@+id/btn1600M"
                 android:layout_width="0dp"
                 android:layout_height="35dp"
                 android:layout_margin="1dp"
@@ -420,11 +420,11 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="0dp"
-                android:text="4000M"
+                android:text="1600M"
                 android:textSize="14sp" />
 
             <Button
-                android:id="@+id/btn5000M"
+                android:id="@+id/btn1800M"
                 android:layout_width="0dp"
                 android:layout_height="35dp"
                 android:layout_margin="1dp"
@@ -433,11 +433,11 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="0dp"
-                android:text="5000M"
+                android:text="1800M"
                 android:textSize="14sp" />
 
             <Button
-                android:id="@+id/btn10000M"
+                android:id="@+id/btn2000M"
                 android:layout_width="0dp"
                 android:layout_height="35dp"
                 android:layout_margin="1dp"
@@ -446,7 +446,7 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:padding="0dp"
-                android:text="10000M"
+                android:text="2000M"
                 android:textSize="14sp" />
 
             <Button
@@ -489,7 +489,7 @@
             android:padding="4dp"
             android:text="> M8AX Consola..."
             android:textColor="#FFFFFF"
-            android:textSize="9sp"
+            android:textSize="8sp"
             android:typeface="monospace" />
     </ScrollView>
 </LinearLayout>
