@@ -12,9 +12,8 @@ android {
         applicationId = "com.m8ax_megapi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10111956
+        versionCode = 10111957
         versionName = "10.03.77"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
                 abiFilters("arm64-v8a")
@@ -52,7 +51,5 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation("org.shredzone.commons:commons-suncalc:3.5")
 }
