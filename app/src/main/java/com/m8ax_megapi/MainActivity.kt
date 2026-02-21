@@ -123,7 +123,12 @@ class MainActivity : AppCompatActivity() {
                         "M 8 A X; Listo.",
                         "Sistema Iniciado.",
                         "Hola Que Tal.",
-                        "Motor Preparado."
+                        "Motor Preparado.",
+                        "Transformada De Fourier En Espera.",
+                        "Núcleo Positrónico Activado.",
+                        "C P U, Procesando En Red Neural.",
+                        "Núcleos De Rendimiento Preparados.",
+                        "Branch Predictor Preparado."
                     )
                     tts?.speak(saludos.random(), TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
                 }
@@ -567,7 +572,7 @@ class MainActivity : AppCompatActivity() {
         })
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val formatoCompilacion = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-        val fechaCompilacion = LocalDateTime.parse("20/02/2026 12:25", formatoCompilacion)
+        val fechaCompilacion = LocalDateTime.parse("21/02/2026 16:45", formatoCompilacion)
         val ahora = LocalDateTime.now()
         val (años, dias, horas, minutos, segundos) = if (ahora.isBefore(fechaCompilacion)) {
             listOf(0L, 0L, 0L, 0L, 0L)
@@ -583,7 +588,7 @@ class MainActivity : AppCompatActivity() {
             listOf(a, d, h, m, s)
         }
         val tiempoTranscurrido =
-            "... Fecha De Compilación - 20/02/2026 12:25 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
+            "... Fecha De Compilación - 21/02/2026 16:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
         val textoIzquierda = SpannableString(
             "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 27h De Programación ...\n\n" + "... Con +/- 4500 Líneas De Código ...\n\n" + "... +/- 250 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
         )
@@ -787,6 +792,7 @@ class MainActivity : AppCompatActivity() {
             handlerr.removeCallbacks(snowRunnable)
         }
         dialog.show()
+        vibrarImpacto()
     }
 
     private fun lanzarMotorM8AX(decimales: Long) {
@@ -801,6 +807,7 @@ class MainActivity : AppCompatActivity() {
         val botonActual = botonesPiIds.mapNotNull { findViewById<Button>(it) }
             .find { it.text.toString() == ultimosMillonesPulsados }
         startParpadeo(tvNotaRam, botonActual)
+        vibrarImpacto()
         if (ttsEnabled && !modoLoopActivo) {
             tts?.speak(
                 "Calculando ${ultimosMillonesPulsados}illones De Decimales De Pi.",
@@ -857,6 +864,7 @@ class MainActivity : AppCompatActivity() {
                                 gestionarBotonera(true)
                                 window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                                 contadorLoop = 1
+                                vibrarImpacto()
                                 val textoConsola = tvConsola.text.toString()
                                 val lineaChi = textoConsola.lines()
                                     .findLast { it.contains("Test De Aleatoriedad Chi-Square:") }
@@ -1012,6 +1020,19 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    private fun vibrarImpacto() {
+        val vibrator = getSystemService(VIBRATOR_SERVICE) as android.os.Vibrator
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            vibrator.vibrate(
+                android.os.VibrationEffect.createOneShot(
+                    25, android.os.VibrationEffect.DEFAULT_AMPLITUDE
+                )
+            )
+        } else {
+            @Suppress("DEPRECATION") vibrator.vibrate(25)
+        }
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_borrar) {
             val fichero = File(getExternalFilesDir(null), "M8AX_Pi.txt")
@@ -1035,6 +1056,9 @@ class MainActivity : AppCompatActivity() {
         if (item.itemId == R.id.action_loop_toggle) {
             modoLoopActivo = !modoLoopActivo
             item.isChecked = modoLoopActivo
+            if (!modoLoopActivo && !calculando) {
+                gestionarBotonera(true)
+            }
             contadorLoop = 1
             val estado = if (modoLoopActivo) "Activado" else "Desactivado"
             Toast.makeText(
