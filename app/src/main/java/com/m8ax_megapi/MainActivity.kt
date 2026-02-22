@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvNotaRam: TextView
     private var tts: TextToSpeech? = null
     private var ttsEnabled: Boolean = false
+    private var grabarEnNotasEnabled: Boolean = false
     private var contadorLoop = 1
     private val botonesPiIds = listOf(
         R.id.btn1M,
@@ -104,6 +105,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ttsEnabled = CargarEstadoTts()
+        grabarEnNotasEnabled =
+            getSharedPreferences("M8AX-ConfigNotas", Context.MODE_PRIVATE).getBoolean(
+                "GrabarNotas", false
+            )
         setContentView(R.layout.activity_main)
         val mainView = findViewById<View>(R.id.main_container)
         mainView?.let { vista ->
@@ -128,7 +133,32 @@ class MainActivity : AppCompatActivity() {
                         "Núcleo Positrónico Activado.",
                         "C P U, Procesando En Red Neural.",
                         "Núcleos De Rendimiento Preparados.",
-                        "Branch Predictor Preparado."
+                        "Branch Predictor Preparado.",
+                        "No Hay Cuchara, Solo Datos.",
+                        "Buscando El Fin De Pi.",
+                        "Algoritmo Chudnovsky A Full.",
+                        "Bienvenido Al Desierto De Lo Real.",
+                        "Transistores Al Límite.",
+                        "Tu C P U Es El Arquitecto.",
+                        "F F T Calculando El Caos.",
+                        "Dígitos De Pi Sincronizados.",
+                        "Código Nativo Sin Filtros.",
+                        "Precisión Arbitraria Alcanzada.",
+                        "Voltaje En Punto Crítico.",
+                        "Tu Silicio Está Despertando.",
+                        "M 8 A X: El Oráculo Del Hardware.",
+                        "Decimales Infinitos Detectados.",
+                        "Newton Iterando La Verdad.",
+                        "Sé Kung Fu Digital.",
+                        "HAL 9000 Conectado.",
+                        "Protocolo Skynet Iniciado.",
+                        "Exigiendo El Máximo Al Silicio.",
+                        "Carga Extrema Verificada.",
+                        "Sueñan Los Androides.",
+                        "He Visto Cosas Increíbles.",
+                        "Inestabilidad No Detectada.",
+                        "Hackeando El Límite Térmico.",
+                        "Sin Piedad Con Los Núcleos."
                     )
                     tts?.speak(saludos.random(), TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId")
                 }
@@ -572,7 +602,7 @@ class MainActivity : AppCompatActivity() {
         })
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val formatoCompilacion = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-        val fechaCompilacion = LocalDateTime.parse("21/02/2026 16:45", formatoCompilacion)
+        val fechaCompilacion = LocalDateTime.parse("22/02/2026 19:45", formatoCompilacion)
         val ahora = LocalDateTime.now()
         val (años, dias, horas, minutos, segundos) = if (ahora.isBefore(fechaCompilacion)) {
             listOf(0L, 0L, 0L, 0L, 0L)
@@ -588,7 +618,7 @@ class MainActivity : AppCompatActivity() {
             listOf(a, d, h, m, s)
         }
         val tiempoTranscurrido =
-            "... Fecha De Compilación - 21/02/2026 16:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
+            "... Fecha De Compilación - 22/02/2026 19:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
         val textoIzquierda = SpannableString(
             "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 27h De Programación ...\n\n" + "... Con +/- 4500 Líneas De Código ...\n\n" + "... +/- 250 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
         )
@@ -846,6 +876,54 @@ class MainActivity : AppCompatActivity() {
                             }GB"
                             calculando = false
                             stopParpadeo(tvNotaRam)
+                            val textoConsola = tvConsola.text.toString()
+                            val lineaChi = textoConsola.lines()
+                                .findLast { it.contains("Test De Aleatoriedad Chi-Square:") }
+                            val numeroChi =
+                                lineaChi?.substringAfter("Chi-Square: ")?.substringBefore(" ]")
+                                    ?.trim() ?: "0.0000"
+                            val chiDouble = numeroChi.toDoubleOrNull() ?: 0.0
+                            val saludEstado = if (chiDouble < 16.92) "Buena." else "Baja."
+                            val soloNumero = lineaIndiceFinal.replace("M8AX", "")
+                                .filter { it.isDigit() || it == '.' }.trim().replace(".", ",")
+                            if (grabarEnNotasEnabled) {
+                                try {
+                                    val fechaNota = java.text.SimpleDateFormat(
+                                        "dd/MM/yyyy - HH:mm:ss", java.util.Locale.getDefault()
+                                    ).format(java.util.Date())
+                                    val prefsNotas = getSharedPreferences(
+                                        "M8AX-Notas_Importantes", Context.MODE_PRIVATE
+                                    )
+                                    val notasActuales =
+                                        prefsNotas.getString("Lista_Notas_JsoN", "[]")
+                                    val jsonArray = org.json.JSONArray(notasActuales)
+                                    val nuevaNotaTexto =
+                                        "[ $fechaNota ]\nPi - $ultimosMillonesPulsados\nChi-Square - ${
+                                            numeroChi.replace(
+                                                '.', ','
+                                            )
+                                        }\nSalud CPU / RAM- ${saludEstado}\nÍndice De Velocidad - ${
+                                            soloNumero.replace(
+                                                '.', ','
+                                            )
+                                        }"
+                                    val nuevaNotaObj = org.json.JSONObject()
+                                    nuevaNotaObj.put("Nombre", nuevaNotaTexto)
+                                    nuevaNotaObj.put("Comprado", false)
+                                    jsonArray.put(nuevaNotaObj)
+                                    prefsNotas.edit()
+                                        .putString("Lista_Notas_JsoN", jsonArray.toString()).apply()
+                                    if (!modoLoopActivo) {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Resultado Guardado En Notas",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
                             if (modoLoopActivo) {
                                 contadorLoop++
                                 val mensajeLoop = "Iniciando Test, Número $contadorLoop."
@@ -880,7 +958,7 @@ class MainActivity : AppCompatActivity() {
                                 val mensajeVoz =
                                     "Cálculo Terminado. Índice De Velocidad Para ${ultimosMillonesPulsados}illones De Decimales De Pi En Tu Móvil: $soloNumero. Prueba De Bondad De Ajuste De Chi Cuadrado De Pearson; $numeroChi. Salud De C P U Y Ram, $saludEstado Grácias Por Usar M 8 A X; Mega Pi."
                                 val mensajePantalla =
-                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\nChi-Square: $numeroChi\n\nSalud De ( CPU / RAM ) - $saludEstado\n\n$lineaIndiceFinal\n\nReferencias De Algunos SOC:\n\nQualcomm Snapdragon 400 - 1.285 Puntos.\n\nQualcomm Snapdragon 710 - 5.506 Puntos."
+                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\nChi-Square: $numeroChi\n\nSalud De ( CPU / RAM ) - $saludEstado\n\n$lineaIndiceFinal\n\n--- Referencias De Algunos SOC ---\n\nQualcomm Snapdragon 400 - 1.285 Puntos.\n\nQualcomm Snapdragon 710 - 5.506 Puntos."
                                 if (ttsEnabled) {
                                     tts?.stop()
                                     Thread.sleep(200)
@@ -937,13 +1015,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
-        val item = menu?.findItem(R.id.M8AX_Menu_TTS)
-        item?.isChecked = ttsEnabled
-        if (ttsEnabled) {
-            item?.title = "● Audio TTS Activado"
-        } else {
-            item?.title = "● Audio TTS Desactivado"
-        }
+        val itemTts = menu?.findItem(R.id.M8AX_Menu_TTS)
+        itemTts?.isChecked = ttsEnabled
+        itemTts?.title = if (ttsEnabled) "● Audio TTS Activado" else "● Audio TTS Desactivado"
+        val itemNotas = menu?.findItem(R.id.action_guardar_notas_toggle)
+        itemNotas?.isChecked = grabarEnNotasEnabled
+        itemNotas?.title =
+            if (grabarEnNotasEnabled) "● Grabar Auto-Notas - ON" else "● Grabar Auto-Notas - OFF"
         return true
     }
 
@@ -996,6 +1074,7 @@ class MainActivity : AppCompatActivity() {
             setTextColor(Color.WHITE)
             setOnClickListener {
                 if (ttsEnabled) {
+                    tts?.stop()
                     tts?.speak("Okey.", TextToSpeech.QUEUE_FLUSH, null, null)
                 }
                 dialog.dismiss()
@@ -1017,6 +1096,11 @@ class MainActivity : AppCompatActivity() {
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
             android.view.ViewGroup.LayoutParams.MATCH_PARENT
         )
+        dialog.setOnDismissListener {
+            if (ttsEnabled) {
+                tts?.stop()
+            }
+        }
         dialog.show()
     }
 
@@ -1111,6 +1195,16 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             return true
         }
+        if (item.itemId == R.id.action_notas) {
+            val intent = Intent(this, NotasActivity::class.java)
+            if (ttsEnabled) {
+                tts?.speak(
+                    "Añade Tus Notas.", TextToSpeech.QUEUE_FLUSH, null, "ttsTetrisId"
+                )
+            }
+            startActivity(intent)
+            return true
+        }
         if (item.itemId == R.id.action_tetris) {
             val intent = Intent(this, TetrisActivity::class.java)
             intent.putExtra("ttsEnabled", ttsEnabled)
@@ -1164,6 +1258,19 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
             }
             finishAffinity()
+            return true
+        }
+        if (item.itemId == R.id.action_guardar_notas_toggle) {
+            grabarEnNotasEnabled = !grabarEnNotasEnabled
+            getSharedPreferences("M8AX-ConfigNotas", Context.MODE_PRIVATE).edit()
+                .putBoolean("GrabarNotas", grabarEnNotasEnabled).apply()
+            item.isChecked = grabarEnNotasEnabled
+            item.title =
+                if (grabarEnNotasEnabled) "● Grabar Auto-Notas - ON" else "● Grabar Auto-Notas - OFF"
+            val aviso =
+                if (grabarEnNotasEnabled) "Grabación De Auto-Notas; Activado" else "Grabación De Auto-Notas; Desactivado"
+            Toast.makeText(this, "M8AX - $aviso", Toast.LENGTH_SHORT).show()
+            if (ttsEnabled) tts?.speak(aviso, TextToSpeech.QUEUE_FLUSH, null, null)
             return true
         }
         return super.onOptionsItemSelected(item)

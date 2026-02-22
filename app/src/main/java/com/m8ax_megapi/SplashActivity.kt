@@ -138,7 +138,8 @@ class SplashActivity : AppCompatActivity() {
             R.raw.m8axvideo6,
             R.raw.m8axvideo7,
             R.raw.m8axvideo8,
-            R.raw.m8axvideo9
+            R.raw.m8axvideo9,
+            R.raw.m8axvideo10
         )
         if (Math.random() < 0.5) {
             logoImage.visibility = View.VISIBLE
