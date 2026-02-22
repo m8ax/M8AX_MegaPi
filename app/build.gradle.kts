@@ -52,4 +52,5 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.shredzone.commons:commons-suncalc:3.5")
+    implementation("com.itextpdf:itextg:5.5.10")
 }
