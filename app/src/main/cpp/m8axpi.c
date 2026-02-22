@@ -732,10 +732,35 @@ int calcular_pi(long int d, int out) {
     }
     if (hum2 == 0)
         printf("M8AX - [ Días Leyendo Los Decimales En Voz Alta - %.5f d. ]\n", hum);
+    double metrosH = (double) d * 0.0000000001;
+    if (metrosH < 0.001) {
+        printf("M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f mm. ]\n", metrosH * 1000.0);
+    } else if (metrosH < 1.0) {
+        printf("M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f cm. ]\n", metrosH * 100.0);
+    } else if (metrosH < 1000.0) {
+        printf("M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f m. ]\n", metrosH);
+    } else {
+        printf("M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f Km. ]\n", metrosH / 1000.0);
+    }
     printf("M8AX - [ Decimales De Pi En Fila ( Arial 10 pt ) Miden - %.5f Km. ]\n",
            ((double) d * 0.25100377) / 100000);
     printf("M8AX - [ Velocidad En Km/h. - %.5f Km/h. ]\n",
            v_kmh);
+    printf("M8AX - [ Vueltas Al Mundo Por Segundo - %.8f Vueltas. ]\n", (v_kmh / 3600.0) / 40075.0);
+    if (v_kmh > 0) {
+        printf("M8AX - [ Tiempo Para Dar Una Vuelta Al Mundo - %.2f Horas. ]\n", 40075.0 / v_kmh);
+    }
+    double distanciaLuna = 384400.0;
+    double segundosALaLuna = (distanciaLuna / v_kmh) * 3600.0;
+    long long s_total = (long long) segundosALaLuna;
+    int Xdias = s_total / 86400;
+    int Xresto_dias = s_total % 86400;
+    int Xhoras = Xresto_dias / 3600;
+    int Xresto_horas = Xresto_dias % 3600;
+    int Xminutos = Xresto_horas / 60;
+    int Xsegundos = Xresto_horas % 60;
+    printf("M8AX - [ Llegaríamos A La Luna En - %dd %dh %dm %ds. ]\n", Xdias, Xhoras, Xminutos,
+           Xsegundos);
     printf("M8AX - [ Bolis Bic Gastados Escribiendo Los Decimales - %.5f Bolis. ]\n",
            (((double) d * 0.25100377) / 100.0) / 2435.0);
     printf("M8AX - [ Bolsas De 1Kg De Arroz. Cada Grano Un Dígito. - %.5f Bolsas. ]\n",
@@ -744,6 +769,16 @@ int calcular_pi(long int d, int out) {
            ((double) d * 0.0512) / 1000.00000);
     printf("M8AX - [ Litros De Agua/Seg Procesados. - %.5f Litros/Seg. ]\n",
            l_seg);
+    double segundosPiscina = 2500000.0 / l_seg;
+    long long sp_total = (long long) segundosPiscina;
+    int P_dias = sp_total / 86400;
+    int P_resto_dias = sp_total % 86400;
+    int P_horas = P_resto_dias / 3600;
+    int P_resto_horas = P_resto_dias % 3600;
+    int P_minutos = P_resto_horas / 60;
+    int P_segundos = P_resto_horas % 60;
+    printf("M8AX - [ Llenaríamos Una Piscina Olímpica En - %dd %dh %dm %ds. ]\n", P_dias, P_horas,
+           P_minutos, P_segundos);
     indv = (d_seg * 100.0) / 10000000.0;
     printf("\n------------------------------------------------------------------------\n"
            "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f - M8AX ]\n"
@@ -885,11 +920,47 @@ int calcular_pi(long int d, int out) {
                 fprintf(archi2,
                         "M8AX - [ Días Leyendo Los Decimales En Voz Alta - %.5f d. ] - M8AX\n",
                         hum);
+            double metrosH = (double) d * 0.0000000001;
+            if (metrosH < 0.001) {
+                fprintf(archi2,
+                        "M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f mm. ] - M8AX\n",
+                        metrosH * 1000.0);
+            } else if (metrosH < 1.0) {
+                fprintf(archi2,
+                        "M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f cm. ] - M8AX\n",
+                        metrosH * 100.0);
+            } else if (metrosH < 1000.0) {
+                fprintf(archi2,
+                        "M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f m. ] - M8AX\n",
+                        metrosH);
+            } else {
+                fprintf(archi2,
+                        "M8AX - [ Longitud En Fila De Átomos De Hidrógeno - %.6f Km. ] - M8AX\n",
+                        metrosH / 1000.0);
+            }
             fprintf(archi2,
                     "M8AX - [ Decimales De Pi En Fila ( Arial 10 pt ) Miden - %.5f Km. ] - M8AX\n",
                     ((double) d * 0.25100377) / 100000);
             fprintf(archi2, "M8AX - [ Velocidad En Km/h. - %.5f Km/h. ] - M8AX\n",
                     v_kmh);
+            fprintf(archi2, "M8AX - [ Vueltas Al Mundo Por Segundo - %.8f Vueltas. ] - M8AX\n",
+                    (v_kmh / 3600.0) / 40075.0);
+            if (v_kmh > 0) {
+                fprintf(archi2,
+                        "M8AX - [ Tiempo Para Dar Una Vuelta Al Mundo - %.2f Horas. ] - M8AX\n",
+                        40075.0 / v_kmh);
+            }
+            double distanciaLuna = 384400.0;
+            double segundosALaLuna = (distanciaLuna / v_kmh) * 3600.0;
+            long long s_total = (long long) segundosALaLuna;
+            int Xdias = s_total / 86400;
+            int Xresto_dias = s_total % 86400;
+            int Xhoras = Xresto_dias / 3600;
+            int Xresto_horas = Xresto_dias % 3600;
+            int Xminutos = Xresto_horas / 60;
+            int Xsegundos = Xresto_horas % 60;
+            fprintf(archi2, "M8AX - [ Llegaríamos A La Luna En - %dd %dh %dm %ds. ] - M8AX\n",
+                    Xdias, Xhoras, Xminutos, Xsegundos);
             fprintf(archi2,
                     "M8AX - [ Bolis Bic Gastados Escribiendo Los Decimales - %.5f Bolis. ] - M8AX\n",
                     (((double) d * 0.25100377) / 100.0) / 2435.0);
@@ -901,6 +972,17 @@ int calcular_pi(long int d, int out) {
                     ((double) d * 0.0512) / 1000.00000);
             fprintf(archi2, "M8AX - [ Litros De Agua/Seg Procesados. - %.5f Litros/Seg. ] - M8AX\n",
                     l_seg);
+            double segundosPiscina = 2500000.0 / l_seg;
+            long long sp_total = (long long) segundosPiscina;
+            int P_dias = sp_total / 86400;
+            int P_resto_dias = sp_total % 86400;
+            int P_horas = P_resto_dias / 3600;
+            int P_resto_horas = P_resto_dias % 3600;
+            int P_minutos = P_resto_horas / 60;
+            int P_segundos = P_resto_horas % 60;
+            fprintf(archi2,
+                    "M8AX - [ Llenaríamos Una Piscina Olímpica En - %dd %dh %dm %ds. ] - M8AX\n",
+                    P_dias, P_horas, P_minutos, P_segundos);
             fprintf(archi2, "M8AX - [ Suma De Todos Los Decimales. 3.14159 = 20. - %li. ] - M8AX\n",
                     sumd);
             fprintf(archi2,
