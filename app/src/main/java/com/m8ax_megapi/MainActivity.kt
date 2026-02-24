@@ -9,7 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.ToneGenerator
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -384,71 +386,71 @@ class MainActivity : AppCompatActivity() {
                         var ramNecesaria = 0.0
                         when {
                             millones >= 2000 -> {
-                                ramNecesaria = 16.0; if (ramTotalGB < 16.0) bloqueadoPorRam = true
+                                ramNecesaria = 28.0; if (ramTotalGB < 28.0) bloqueadoPorRam = true
                             }
 
                             millones >= 1800 -> {
-                                ramNecesaria = 14.8; if (ramTotalGB < 14.8) bloqueadoPorRam = true
+                                ramNecesaria = 25.5; if (ramTotalGB < 25.5) bloqueadoPorRam = true
                             }
 
                             millones >= 1600 -> {
-                                ramNecesaria = 13.6; if (ramTotalGB < 13.6) bloqueadoPorRam = true
+                                ramNecesaria = 23.0; if (ramTotalGB < 23.0) bloqueadoPorRam = true
                             }
 
                             millones >= 1400 -> {
-                                ramNecesaria = 12.4; if (ramTotalGB < 12.4) bloqueadoPorRam = true
+                                ramNecesaria = 20.5; if (ramTotalGB < 20.5) bloqueadoPorRam = true
                             }
 
                             millones >= 1200 -> {
-                                ramNecesaria = 11.2; if (ramTotalGB < 11.2) bloqueadoPorRam = true
+                                ramNecesaria = 18.0; if (ramTotalGB < 18.0) bloqueadoPorRam = true
                             }
 
                             millones >= 1000 -> {
-                                ramNecesaria = 10.0; if (ramTotalGB < 10.0) bloqueadoPorRam = true
+                                ramNecesaria = 15.5; if (ramTotalGB < 15.5) bloqueadoPorRam = true
                             }
 
                             millones >= 900 -> {
-                                ramNecesaria = 9.5; if (ramTotalGB < 9.5) bloqueadoPorRam = true
+                                ramNecesaria = 14.0; if (ramTotalGB < 14.0) bloqueadoPorRam = true
                             }
 
                             millones >= 800 -> {
-                                ramNecesaria = 9.0; if (ramTotalGB < 9.0) bloqueadoPorRam = true
+                                ramNecesaria = 12.5; if (ramTotalGB < 12.5) bloqueadoPorRam = true
                             }
 
                             millones >= 700 -> {
-                                ramNecesaria = 8.0; if (ramTotalGB < 8.0) bloqueadoPorRam = true
+                                ramNecesaria = 10.8; if (ramTotalGB < 10.8) bloqueadoPorRam = true
                             }
 
                             millones >= 600 -> {
-                                ramNecesaria = 7.0; if (ramTotalGB < 7.0) bloqueadoPorRam = true
+                                ramNecesaria = 8.5; if (ramTotalGB < 8.5) bloqueadoPorRam = true
                             }
 
                             millones >= 500 -> {
-                                ramNecesaria = 5.5; if (ramTotalGB < 5.5) bloqueadoPorRam = true
+                                ramNecesaria = 7.0; if (ramTotalGB < 7.0) bloqueadoPorRam = true
                             }
 
                             millones >= 400 -> {
-                                ramNecesaria = 4.5; if (ramTotalGB < 4.5) bloqueadoPorRam = true
+                                ramNecesaria = 5.4; if (ramTotalGB < 5.4) bloqueadoPorRam = true
                             }
 
                             millones >= 300 -> {
-                                ramNecesaria = 3.5; if (ramTotalGB < 3.5) bloqueadoPorRam = true
+                                ramNecesaria = 4.2; if (ramTotalGB < 4.2) bloqueadoPorRam = true
                             }
 
                             millones >= 200 -> {
-                                ramNecesaria = 2.5; if (ramTotalGB < 2.5) bloqueadoPorRam = true
+                                ramNecesaria = 2.8; if (ramTotalGB < 2.8) bloqueadoPorRam = true
                             }
 
                             millones >= 100 -> {
-                                ramNecesaria = 1.5; if (ramTotalGB < 1.5) bloqueadoPorRam = true
+                                ramNecesaria = 1.4; if (ramTotalGB < 1.4) bloqueadoPorRam = true
                             }
 
                             millones >= 80 -> {
-                                ramNecesaria = 1.2; if (ramTotalGB < 1.2) bloqueadoPorRam = true
+                                ramNecesaria = 1.1; if (ramTotalGB < 1.1) bloqueadoPorRam = true
                             }
 
                             millones >= 60 -> {
-                                ramNecesaria = 0.9; if (ramTotalGB < 0.9) bloqueadoPorRam = true
+                                ramNecesaria = 0.8; if (ramTotalGB < 0.8) bloqueadoPorRam = true
                             }
 
                             millones >= 40 -> {
@@ -456,19 +458,19 @@ class MainActivity : AppCompatActivity() {
                             }
 
                             millones >= 20 -> {
-                                ramNecesaria = 0.4; if (ramTotalGB < 0.4) bloqueadoPorRam = true
+                                ramNecesaria = 0.3; if (ramTotalGB < 0.3) bloqueadoPorRam = true
                             }
 
                             millones >= 10 -> {
-                                ramNecesaria = 0.25; if (ramTotalGB < 0.25) bloqueadoPorRam = true
+                                ramNecesaria = 0.2; if (ramTotalGB < 0.2) bloqueadoPorRam = true
                             }
 
                             millones >= 6 -> {
-                                ramNecesaria = 0.18; if (ramTotalGB < 0.18) bloqueadoPorRam = true
+                                ramNecesaria = 0.15; if (ramTotalGB < 0.15) bloqueadoPorRam = true
                             }
 
                             millones >= 1 -> {
-                                ramNecesaria = 0.08; if (ramTotalGB < 0.08) bloqueadoPorRam = true
+                                ramNecesaria = 0.05; if (ramTotalGB < 0.05) bloqueadoPorRam = true
                             }
                         }
                         if (bloqueadoPorRam) {
@@ -477,7 +479,7 @@ class MainActivity : AppCompatActivity() {
                             btn.setOnClickListener {
                                 if (ttsEnabled) {
                                     tts?.speak(
-                                        "RAM Insuficiente, Necesitas Más De ${ramNecesaria}GB",
+                                        "RAM Insuficiente, Necesitas ${ramNecesaria}GB Libres, De Memoria RAM.",
                                         TextToSpeech.QUEUE_FLUSH,
                                         null,
                                         "ttsStopId"
@@ -485,7 +487,7 @@ class MainActivity : AppCompatActivity() {
                                 }
                                 Toast.makeText(
                                     this,
-                                    "M8AX - RAM Insuficiente (Necesitas > ${ramNecesaria}GB)",
+                                    "M8AX - RAM Insuficiente ( Necesitas ${ramNecesaria}GB ) Libres",
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
@@ -602,7 +604,7 @@ class MainActivity : AppCompatActivity() {
         })
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val formatoCompilacion = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-        val fechaCompilacion = LocalDateTime.parse("22/02/2026 19:45", formatoCompilacion)
+        val fechaCompilacion = LocalDateTime.parse("24/02/2026 13:45", formatoCompilacion)
         val ahora = LocalDateTime.now()
         val (años, dias, horas, minutos, segundos) = if (ahora.isBefore(fechaCompilacion)) {
             listOf(0L, 0L, 0L, 0L, 0L)
@@ -618,7 +620,7 @@ class MainActivity : AppCompatActivity() {
             listOf(a, d, h, m, s)
         }
         val tiempoTranscurrido =
-            "... Fecha De Compilación - 22/02/2026 19:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
+            "... Fecha De Compilación - 24/02/2026 13:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
         val textoIzquierda = SpannableString(
             "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 27h De Programación ...\n\n" + "... Con +/- 4500 Líneas De Código ...\n\n" + "... +/- 250 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
         )
@@ -942,6 +944,9 @@ class MainActivity : AppCompatActivity() {
                                 gestionarBotonera(true)
                                 window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                                 contadorLoop = 1
+                                ToneGenerator(AudioManager.STREAM_ALARM, 100).startTone(
+                                    ToneGenerator.TONE_PROP_ACK, 150
+                                )
                                 vibrarImpacto()
                                 val textoConsola = tvConsola.text.toString()
                                 val lineaChi = textoConsola.lines()
