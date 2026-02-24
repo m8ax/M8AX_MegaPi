@@ -571,7 +571,7 @@ int calcular_pi(long int d, int out) {
     puts("¿ Sabías Que El Consumo De RAM Es Progresivo Y No Lineal ?");
     puts("Calcular 4.5 Millones De Decimales Requiere 72Mb De RAM, Pero");
     puts("Al Doblar Los Dígitos, El Consumo Se Multiplica Exponencialmente.");
-    puts("Para 400 Millones Se Superan Los 5.5Gb De Memoria Real.");
+    puts("Para 400 Millones Se Superan Los 5.4GB De Memoria Real.");
     puts("");
     puts("¿ Tiene Tu Dispositivo RAM Suficiente O Saltará El OOM Killer ?");
     puts("Bloqueo De Seguridad Activado Según La RAM De Tu Sistema.");
