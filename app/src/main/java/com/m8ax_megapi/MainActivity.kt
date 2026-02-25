@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         activityManager.getMemoryInfo(memoryInfo)
         ramTotalGB = memoryInfo.totalMem.toDouble() / (1024.0 * 1024.0 * 1024.0)
         findViewById<TextView>(R.id.txtStatus).text =
-            "M8AX - RAM Libre: ${String.format("%.2f", ramTotalGB)}GB"
+            "M8AX - RAM Libre - ${String.format("%.2f", ramTotalGB)}GB"
         val fichero = File(getExternalFilesDir(null), "M8AX_Pi.txt")
         if (fichero.exists()) fichero.delete()
         val tvNota = findViewById<TextView>(R.id.tvNotaRam)
@@ -604,7 +604,7 @@ class MainActivity : AppCompatActivity() {
         })
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
         val formatoCompilacion = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
-        val fechaCompilacion = LocalDateTime.parse("24/02/2026 13:45", formatoCompilacion)
+        val fechaCompilacion = LocalDateTime.parse("25/02/2026 16:45", formatoCompilacion)
         val ahora = LocalDateTime.now()
         val (años, dias, horas, minutos, segundos) = if (ahora.isBefore(fechaCompilacion)) {
             listOf(0L, 0L, 0L, 0L, 0L)
@@ -620,7 +620,7 @@ class MainActivity : AppCompatActivity() {
             listOf(a, d, h, m, s)
         }
         val tiempoTranscurrido =
-            "... Fecha De Compilación - 24/02/2026 13:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
+            "... Fecha De Compilación - 25/02/2026 16:45 ...\n\n... Tmp. Desde Compilación - ${años}a${dias}d${horas}h${minutos}m${segundos}s ..."
         val textoIzquierda = SpannableString(
             "App Creada Por MarcoS OchoA DieZ - ( M8AX )\n\n" + "Mail - mviiiax.m8ax@gmail.com\n\n" + "Youtube - https://youtube.com/m8ax\n\n" + "El Futuro No Está Establecido, No Hay Destino, Solo Existe El Que Nosotros Hacemos...\n\n\n" + "... Creado En 27h De Programación ...\n\n" + "... Con +/- 4500 Líneas De Código ...\n\n" + "... +/- 250 KB En Texto Plano | TXT | ...\n\n" + "... +/- Novela Cándido De Voltaire En Código ...\n\n" + tiempoTranscurrido + "\n\n"
         )
@@ -871,7 +871,7 @@ class MainActivity : AppCompatActivity() {
                             val memoryInfo = android.app.ActivityManager.MemoryInfo()
                             activityManager.getMemoryInfo(memoryInfo)
                             ramTotalGB = memoryInfo.totalMem.toDouble() / (1024.0 * 1024.0 * 1024.0)
-                            txtStatus.text = "M8AX - Cálculo Finalizado · RAM Libre: ${
+                            txtStatus.text = "M8AX - Cálculo Finalizado · RAM Libre - ${
                                 String.format(
                                     "%.2f", ramTotalGB
                                 )
@@ -963,7 +963,7 @@ class MainActivity : AppCompatActivity() {
                                 val mensajeVoz =
                                     "Cálculo Terminado. Índice De Velocidad Para ${ultimosMillonesPulsados}illones De Decimales De Pi En Tu Móvil: $soloNumero. Prueba De Bondad De Ajuste De Chi Cuadrado De Pearson; $numeroChi. Salud De C P U Y Ram, $saludEstado Grácias Por Usar M 8 A X; Mega Pi."
                                 val mensajePantalla =
-                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\nChi-Square: $numeroChi\n\nSalud De ( CPU / RAM ) - $saludEstado\n\n$lineaIndiceFinal\n\n--- Referencias De Algunos SOC ---\n\nQualcomm Snapdragon 400 - 1.285 Puntos.\n\nQualcomm Snapdragon 710 - 5.506 Puntos."
+                                    "M8AX - Cálculo: [ $ultimosMillonesPulsados ]\n\nChi-Square: $numeroChi\n\nSalud De ( CPU / RAM ) - $saludEstado\n\n$lineaIndiceFinal\n\n--- Referencias [ 10M ] De Algunos SOC ---\n\nQualcomm Snapdragon 400 - 1.285 Puntos.\n\nQualcomm Snapdragon 710 - 5.506 Puntos."
                                 if (ttsEnabled) {
                                     tts?.stop()
                                     Thread.sleep(200)
@@ -983,12 +983,30 @@ class MainActivity : AppCompatActivity() {
                         calculando = false
                     }
                 }.start()
+                var ultimaRam = 0L
                 while (calculando) {
                     val linea = try {
                         reader.readLine()
                     } catch (e: Exception) {
                         null
                     } ?: break
+                    val ahora = System.currentTimeMillis()
+                    if (ahora - ultimaRam > 1000) {
+                        ultimaRam = ahora
+                        val activityManager =
+                            getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
+                        val memoryInfo = android.app.ActivityManager.MemoryInfo()
+                        activityManager.getMemoryInfo(memoryInfo)
+                        val ramDisponible =
+                            memoryInfo.availMem.toDouble() / (1024.0 * 1024.0 * 1024.0)
+                        runOnUiThread {
+                            txtStatus.text = "M8AX - Motor En Marcha... RAM Libre - ${
+                                String.format(
+                                    "%.2f", ramDisponible
+                                )
+                            }GB"
+                        }
+                    }
                     if (!linea.contains("beginning of") && !linea.startsWith("---------")) {
                         if (linea.contains("Índice De Velocidad De Tu Móvil")) {
                             lineaIndiceFinal = linea
