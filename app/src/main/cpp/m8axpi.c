@@ -19,6 +19,8 @@
 long double termis;
 long tiempoa, tiempob, coco2, min;
 double paginas = 1500.0, quijote = 2034611.0;
+char ultimos1000[1001];
+int idx;
 #if CHECK_MEMUSAGE
 #undef CHECK_MEMUSAGE
 #define CHECK_MEMUSAGE
@@ -781,39 +783,47 @@ int calcular_pi(long int d, int out) {
            P_minutos, P_segundos);
     indv = (d_seg * 100.0) / 10000000.0;
     printf("\n------------------------------------------------------------------------\n"
-           "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f - M8AX ]\n"
-           "M8AX - [ Ref. 100 Pts = 10M Dec/Seg ] | [ Mi 9 Lite = 5.506 ] | [ S4 Mini = 1.285 ]\n",
+           "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f ]\n"
+           "M8AX - [ Ref. 100 Pts = 10M Dec/Seg ] - ¿ Algún Móvil Lo Logrará ?\n"
+           "M8AX - [ [10M]: Xiaomi Mi 9 Lite = 5.506 ] | [ Samsung Galaxy S4 Mini = 1.285 ]\n",
            indv);
     if (out == 1) {
-        printf("\n------------------------------------------------------------------------\nM8AX - Espera Un Momentito, Grabando Archivo En SDCard - M8AX\n------------------------------------------------------------------------\n");
-        printf("\nM8AX - [ Fichero M8AX_Pi.txt Grabado En /storage/emulated/0/Android/data/com.m8ax_megapi/files/ En %.5f Segundos. ] - M8AX\n",
-               (double) (m8ax_tiempo_cpu() - end) / 1000);
-        printf("\n");
-    }
-    if (out == 1) {
-        printf("\nM8AX - [ Generando String En RAM Y Contando... ]\n");
-        mp_exp_t expon;
-        char *str = mpf_get_str(NULL, &expon, 10, d + 10, qi);
-        if (str) {
-            for (int j = 0; j < 256; j++) numeris[j] = 0;
-            for (long i = 1; i <= d; i++) {
-                numeris[(unsigned char) str[i]]++;
+        printf("\nM8AX - [ Mapeo En RAM, LIMBS ( GMP ) A Decimales Y Creando Fichero TXT ] - M8AX\n");
+        printf("M8AX - [ ESPERA... PROCESO CRÍTICO DE ALTA INTENSIDAD EN RAM Y CPU ] - M8AX\n");
+        FILE *a = fopen("/storage/emulated/0/Android/data/com.m8ax_megapi/files/M8AX_Pi.txt", "w");
+        for (int j = 0; j < 256; j++) numeris[j] = 0;
+        sumd = 0;
+        if (a) {
+            mp_exp_t exp;
+            char *s = mpf_get_str(NULL, &exp, 10, d + 5, qi);
+            if (s) {
+                char *p = s;
+                if (*p == '-') p++;
+                fprintf(a, "3.");
+                p++;
+                idx = 0;
+                for (long long i = 0; i < (long long) d; i++) {
+                    unsigned char digito = (unsigned char) p[i];
+                    fputc(digito, a);
+                    numeris[digito]++;
+                    sumd += (digito - '0');
+                    if (i >= (long long) d - 1000) {
+                        ultimos1000[idx++] = digito;
+                    }
+                }
+                ultimos1000[idx] = '\0';
+                free(s);
             }
-            FILE *archi = fopen(
-                    "/storage/emulated/0/Android/data/com.m8ax_megapi/files/M8AX_Pi.txt", "w");
-            if (archi) {
-                fprintf(archi, "3.");
-                fwrite(str + 1, 1, d, archi);
-                fclose(archi);
-            }
-            free(str);
-            printf("M8AX - [ Decimales Grabados Y Estadísticas Listas. ]\n\n");
+            fclose(a);
+            puts("");
+            printf("M8AX - [ Proceso Completado Correctamente Y Fichero M8AX_Pi.txt Grabado En /storage/emulated/0/Android/data/com.m8ax_megapi/files/ En %.5f Segundos. ] - M8AX\n\n",
+                   (double) (m8ax_tiempo_cpu() - end) / 1000);
         }
         maxi = 0;
         minim = 2147483647;
-        sumd = 0;
         chi_square = 0;
         esperado = (double) d / 10.0;
+        sumd = 0;
         for (ju = 48; ju <= 57; ju++) {
             sumd = sumd + numeris[ju] * (ju - 48);
             double dif = (double) numeris[ju] - esperado;
@@ -837,13 +847,14 @@ int calcular_pi(long int d, int out) {
                ab, 37);
         printf(". El Dígito Que Menos Ha Salido Es El %c. Sale %li Veces, El %.3f%c .\n\n", jar,
                minim, bc, 37);
+        printf("M8AX - [ Suma De Todos Los Decimales. 3.14159 = 20. - %li. ] - M8AX\n", sumd);
         printf("M8AX - [ Test De Aleatoriedad Chi-Square: %.4f ] - M8AX\n", chi_square);
         if (chi_square < 16.92) {
             printf("M8AX - [ Distribución: EXCELENTE - Normalidad CPU / RAM ] - M8AX\n");
-            printf("M8AX - [ Tu Smartphone Tiene Una Salud Envidiable. ] - M8AX\n");
+            printf("M8AX - [ Tu Smartphone Tiene Una Salud Envidiable. ] - M8AX\n\n");
         } else {
             printf("M8AX - [ Distribución: SOSPECHOSA - Posible Error De CPU / RAM ] - M8AX\n");
-            printf("M8AX - [ Datos No Uniformes. El Hardware Podría Estar Fallando. ] - M8AX\n");
+            printf("M8AX - [ Datos No Uniformes. El Hardware Podría Estar Fallando. ] - M8AX\n\n");
         }
         FILE *archi2 = fopen("/storage/emulated/0/Android/data/com.m8ax_megapi/files/M8AX_Pi.txt",
                              "a");
@@ -987,9 +998,9 @@ int calcular_pi(long int d, int out) {
                     sumd);
             fprintf(archi2,
                     "\n-------------------------------------------------------------------------------------------------------------------------\n\n"
-                    "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f. ] - M8AX\n"
+                    "M8AX - [ Índice De Velocidad De Tu Móvil - %.3f ]\n"
                     "M8AX - [ Referencia: 100 Puntos = 10.000.000 Decimales/Segundo ]\n"
-                    "M8AX - [ Histórico: Mi 9 Lite = 5.506 | S4 Mini = 1.285 ]\n\n"
+                    "M8AX - [ Histórico [ 10M ]: Xiaomi Mi 9 Lite = 5.506 | Samsung Galaxy S4 Mini = 1.285 ]\n\n"
                     "-------------------------------------------------------------------------------------------------------------------------\n",
                     indv);
             time_t t = time(NULL);
@@ -997,7 +1008,7 @@ int calcular_pi(long int d, int out) {
             int anio_actual = tm.tm_year + 1900;
             char *anio_romano = convertirARomano(anio_actual);
             fprintf(archi2,
-                    "\nProgramado Por MarcoS OchoA DieZ En C++ Y Kotlin\nMail - mviiiax.m8ax@gmail.com\nCanal De YouTube - http://youtube.com/m8ax\nDonaciones PayPal - mviiiax.m8ax@hotmail.es\nCreado En Portátil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n\nGrácias Por Usar M8AX - Mega PI v10.03.77\nPrograma Dedicado A MDDD, Mi Madre...\n");
+                    "\nProgramado Por MarcoS OchoA DieZ En C++ Y Kotlin\nMail - mviiiax.m8ax@gmail.com\nCanal De YouTube - http://youtube.com/m8ax\nDonaciones PayPal - mviiiax.m8ax@hotmail.es\nDonaciones Bitcoin - bc1qycuse74j86vr65s4n3wms7wgd3awwu792qcd3e\nCreado En Portátil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n\n-------------------------------------------------------------------------------------------------------------------------\n\nGrácias Por Usar M8AX - Mega PI v10.03.77\nPrograma Dedicado A MDDD, Mi Madre...\n");
             time_t tt = time(NULL);
             struct tm tmm = *localtime(&t);
             fprintf(archi2, "Fecha: %02d/%02d/%d - Hora: %02d:%02d:%02d\n\n",
@@ -1009,10 +1020,6 @@ int calcular_pi(long int d, int out) {
                     anio_romano);
             fclose(archi2);
         }
-        printf("------------------------------------------------------------------------\n");
-        puts("");
-        printf("M8AX - [ Suma De Todos Los Decimales. 3.14159 = 20. - %li. ] - M8AX\n", sumd);
-        printf("------------------------------------------------------------------------\n\n");
     }
     if (out == 8) {
         printf("\nM8AX - [ Pi - ( %ld Términos ) - %li Decimales. ] - M8AX\n\n", terms, d);
@@ -1021,16 +1028,10 @@ int calcular_pi(long int d, int out) {
     }
     printf("..........................................................................");
     puts("");
-    printf("M8AX - [ Últimos 1000 Dígitos Calculados Del Número Pi ] - M8AX");
+    printf("M8AX - [ Últimos 1000 Dígitos Calculados Del Número Pi ] - M8AX\n");
     puts("");
-    mp_exp_t exp_final;
-    char *str_final = mpf_get_str(NULL, &exp_final, 10, d + 10, qi);
-    if (str_final) {
-        long inicio = (d > 1000) ? (d - 1000) : 0;
-        printf("%.1000s\n", str_final + 1 + inicio);
-        fflush(stdout);
-        free(str_final);
-    }
+    printf("%s\n", ultimos1000);
+    fflush(stdout);
     puts("");
     mpf_clear(pi);
     mpf_clear(qi);
@@ -1046,6 +1047,7 @@ int calcular_pi(long int d, int out) {
     puts("Mail - mviiiax.m8ax@gmail.com\n");
     puts("Canal De YouTube - http://youtube.com/m8ax\n");
     puts("Donaciones PayPal - mviiiax.m8ax@hotmail.es\n");
+    puts("Donaciones Bitcoin - bc1qycuse74j86vr65s4n3wms7wgd3awwu792qcd3e\n");
     puts("Creado En Portatil Ninkear A15 Plus Con AMD 5700U Y 32GB De RAM\n");
     puts("");
     puts("..........................................................................\n");
@@ -1058,7 +1060,6 @@ int calcular_pi(long int d, int out) {
            tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900,
            tm.tm_hour, tm.tm_min, tm.tm_sec);
     puts("");
-    puts("..........................................................................\n\n");
     puts("..........................................................................\n");
     printf("...................... MvIiIaX Corp. %d - %s .......................", anio_actual,
            anio_romano);
